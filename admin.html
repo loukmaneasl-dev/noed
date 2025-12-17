@@ -1,0 +1,2230 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>لوحة التحكم - المدير</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root { 
+        --primary: #4f46e5; 
+        --primary-dark: #4338ca; 
+        --secondary: #64748b; 
+        --danger: #ef4444; 
+        --success: #10b981;
+        --warning: #f59e0b;
+        --dark: #1e293b; 
+        --light: #f8fafc; 
+        --surface: #ffffff; 
+        --border: #e2e8f0;
+    }
+    
+    * { box-sizing: border-box; outline: none; }
+    
+    body { 
+        margin: 0; 
+        font-family: 'Tajawal', sans-serif; 
+        background: var(--light); 
+        direction: rtl; 
+        color: var(--dark); 
+        overflow-x: hidden; 
+        min-height: 100vh;
+    }
+    
+    /* Login Overlay */
+    #adminLoginOverlay { 
+        position: fixed; 
+        inset: 0; 
+        background: var(--dark); 
+        z-index: 9999; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        flex-direction: column; 
+    }
+    
+    .login-box { 
+        background: white; 
+        padding: 40px; 
+        border-radius: 20px; 
+        width: 90%; 
+        max-width: 400px; 
+        text-align: center; 
+        box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); 
+    }
+    
+    .login-box h2 { margin-bottom: 20px; color: var(--primary); }
+    .login-box i { color: var(--primary); margin-bottom: 15px; font-size: 3rem; }
+    
+    /* Main Layout */
+    .app-wrapper { 
+        display: none; /* Controlled by JS */
+        min-height: 100vh; 
+        flex-direction: column; 
+    }
+    
+    .header { 
+        background: var(--surface); 
+        padding: 15px 30px; 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); 
+        position: sticky; 
+        top: 0; 
+        z-index: 100; 
+    }
+    
+    .brand { 
+        font-weight: 800; 
+        font-size: 1.4rem; 
+        color: var(--primary); 
+        display: flex; 
+        align-items: center; 
+        gap: 10px; 
+    }
+    
+    .logout-btn { 
+        border: 1px solid var(--danger); 
+        background: #fff; 
+        color: var(--danger); 
+        padding: 8px 20px; 
+        border-radius: 20px; 
+        cursor: pointer; 
+        font-family: inherit; 
+        font-weight: 600; 
+        transition: 0.2s; 
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    
+    .logout-btn:hover { background: var(--danger); color: #fff; }
+
+    .container { 
+        max-width: 1400px; 
+        width: 100%;
+        margin: 30px auto; 
+        padding: 0 20px; 
+        display: grid; 
+        grid-template-columns: 270px 1fr; /* Desktop Layout */
+        gap: 30px; 
+        flex: 1;
+    }
+    
+    /* Sidebar */
+    .sidebar { 
+        display: flex; 
+        flex-direction: column; 
+        gap: 8px; 
+        position: sticky; 
+        top: 100px; 
+        height: fit-content; 
+        max-height: calc(100vh - 120px);
+        overflow-y: auto;
+        padding-left: 10px;
+    }
+    
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
+
+    .nav-btn { 
+        padding: 14px 20px; 
+        background: transparent; 
+        border: 0; 
+        border-radius: 12px; 
+        text-align: right; 
+        cursor: pointer; 
+        transition: 0.2s; 
+        font-family: inherit; 
+        font-size: 1rem; 
+        font-weight: 500; 
+        color: #64748b; 
+        display: flex; 
+        align-items: center; 
+        gap: 12px; 
+        position: relative; 
+    }
+    
+    .nav-btn:hover { background: #e0e7ff; color: var(--primary); }
+    .nav-btn.active { background: var(--primary); color: #fff; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3); }
+    .nav-btn i { width: 24px; text-align: center; font-size: 1.1rem; }
+    
+    .nav-badge { 
+        position: absolute; 
+        left: 15px; 
+        top: 50%; 
+        transform: translateY(-50%); 
+        background: #ef4444; 
+        width: 10px; 
+        height: 10px; 
+        border-radius: 50%; 
+        display: none; 
+        box-shadow: 0 0 0 2px #fff;
+    }
+    .nav-badge.active { display: block; }
+
+    /* Content Area */
+    .content-area { 
+        background: var(--surface); 
+        padding: 40px; 
+        border-radius: 24px; 
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); 
+        min-height: 600px; 
+    }
+    
+    .section-header { 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        margin-bottom: 25px; 
+        padding-bottom: 15px; 
+        border-bottom: 2px solid var(--border); 
+        flex-wrap: wrap; 
+        gap: 15px; 
+    }
+    
+    .section-title { margin: 0; font-size: 1.8rem; font-weight: 800; color: var(--dark); }
+    
+    /* Buttons */
+    .btn { 
+        padding: 10px 20px; 
+        border-radius: 12px; 
+        border: 0; 
+        cursor: pointer; 
+        font-family: inherit; 
+        font-weight: 600; 
+        display: inline-flex; 
+        align-items: center; 
+        gap: 8px; 
+        transition: all 0.2s ease; 
+        font-size: 0.9rem; 
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); 
+        text-decoration: none;
+    }
+    .btn:active { transform: scale(0.98); }
+    
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    
+    .btn-danger { background: #fee2e2; color: #dc2626; }
+    .btn-danger:hover { background: #fecaca; }
+    
+    .btn-success { background: #dcfce7; color: #16a34a; }
+    .btn-success:hover { background: #bbf7d0; }
+    
+    .btn-print { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+    .btn-print:hover { background: #e2e8f0; }
+    
+    .btn-sm { padding: 6px 12px; font-size: 0.8rem; border-radius: 8px; }
+    
+    /* Dashboard Stats */
+    .stats-grid { 
+        display: grid; 
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); 
+        gap: 25px; 
+        margin-bottom: 30px; 
+    }
+    
+    .stat-card { 
+        background: #fff; 
+        padding: 25px; 
+        border-radius: 20px; 
+        text-align: center; 
+        border: 1px solid var(--border); 
+        transition: all 0.3s ease; 
+        cursor: pointer; 
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    .stat-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.05); border-color: var(--primary); }
+    
+    .stat-icon { 
+        width: 64px; 
+        height: 64px; 
+        border-radius: 20px; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        margin-bottom: 15px; 
+        font-size: 1.6rem; 
+    }
+    
+    .stat-num { font-size: 2.2rem; font-weight: 800; color: var(--dark); margin: 5px 0; line-height: 1; }
+    .stat-label { color: var(--secondary); font-weight: 600; font-size: 0.9rem; }
+    
+    /* Tables */
+    .table-container { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border); }
+    
+    .data-table { width: 100%; border-collapse: collapse; border-spacing: 0; background: #fff; }
+    .data-table th { text-align: right; padding: 15px; font-weight: 700; color: var(--secondary); background: #f8fafc; border-bottom: 2px solid var(--border); white-space: nowrap; }
+    .data-table td { padding: 15px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .data-table tr:hover td { background: #fcfcfc; }
+    .data-table tr:last-child td { border-bottom: none; }
+    
+    .actions-cell { display: flex; gap: 6px; }
+    .action-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; border: 0; }
+    .icon-view { background: #ecfdf5; color: #10b981; }
+    .icon-edit { background: #e0e7ff; color: #4f46e5; }
+    .icon-delete { background: #fef2f2; color: #ef4444; }
+    .icon-chat { background: #f0fdf4; color: #15803d; }
+
+    /* Search */
+    .search-box { position: relative; width: 250px; }
+    .search-box input { width: 100%; padding: 10px 36px 10px 12px; border-radius: 10px; border: 1px solid var(--border); background: #fff; box-sizing: border-box; font-family: inherit; font-size: 0.9rem; transition: 0.2s; }
+    .search-box input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+    .search-box i { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--secondary); font-size: 0.9rem; }
+
+    /* Modals */
+    .modal { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(4px); animation: fadeIn 0.2s; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    
+    .modal-content { background: #fff; padding: 30px; border-radius: 20px; width: 550px; max-width: 95%; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); max-height: 90vh; overflow-y: auto; position: relative; display: flex; flex-direction: column; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
+    .modal-title { font-size: 1.4rem; font-weight: 800; margin: 0; color: var(--dark); }
+    .close-modal { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--secondary); }
+    
+    /* Forms */
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: var(--dark); font-size: 0.9rem; }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px 16px; border: 1px solid var(--border); border-radius: 10px; font-family: inherit; box-sizing: border-box; background: #fff; font-size: 0.95rem; }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--primary); outline: none; }
+
+    /* Custom Checkbox Lists (Bulk) & Tree Selection */
+    .bulk-list { max-height: 350px; overflow-y: auto; border: 1px solid var(--border); border-radius: 10px; padding: 8px; background: #fff; margin-top: 5px; }
+    .bulk-item { display: grid; grid-template-columns: 40px 1fr auto; align-items: center; gap: 10px; padding: 10px; border-bottom: 1px solid #f1f5f9; cursor: pointer; transition: 0.2s; border-radius: 8px; }
+    .bulk-item:hover { background: #f8fafc; }
+    .bulk-item:last-child { border-bottom: 0; }
+    .bulk-item input[type="checkbox"] { width: 20px; height: 20px; margin: 0; accent-color: var(--primary); cursor: pointer; }
+    .bulk-item label { margin: 0; cursor: pointer; width: 100%; font-weight: 500; font-size: 0.9rem; }
+    
+    /* Tree Styles for Chat Selection */
+    .tree-level-item { background: #f1f5f9; padding: 8px; border-radius: 8px; margin-bottom: 5px; border: 1px solid #cbd5e1; }
+    .tree-group-item { margin-right: 20px; background: #f8fafc; padding: 6px; border-radius: 6px; margin-bottom: 3px; border-right: 3px solid var(--primary); border: 1px solid #e2e8f0; }
+    /* Improved Student Item in Chat Group Selection */
+    .tree-student-item { 
+        margin-right: 35px; 
+        padding: 8px; 
+        border-bottom: 1px solid #eee; 
+        display: grid; 
+        grid-template-columns: 30px 1fr auto; 
+        align-items: center; 
+        gap: 10px; 
+        background: #fff;
+        border-radius: 6px;
+        margin-bottom: 2px;
+        transition: background 0.2s;
+    }
+    .tree-student-item:hover { background: #f0f9ff; }
+    .tree-student-item input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--primary); margin: 0; cursor: pointer; }
+    .tree-student-item label { cursor: pointer; font-size: 0.9rem; font-weight: 500; }
+
+    .select-counter { font-size: 0.75rem; color: #fff; background: var(--secondary); padding: 2px 6px; border-radius: 10px; margin-right: auto; }
+    .select-counter.active { background: var(--success); }
+
+    .admin-check-label { font-size: 0.75rem; color: #64748b; background: #f1f5f9; padding: 4px 8px; border-radius: 4px; display: flex; align-items: center; gap: 4px; cursor: pointer; }
+    .admin-check-label:hover { background: #e2e8f0; }
+    .admin-check { width: 14px !important; height: 14px !important; accent-color: #ef4444 !important; }
+
+    /* Student Tree View (Main Page) */
+    details { margin-bottom: 8px; }
+    details > summary { padding: 12px 16px; background: #fff; cursor: pointer; border: 1px solid var(--border); border-radius: 10px; font-weight: 700; list-style: none; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
+    details > summary:hover { background: #f8fafc; }
+    details > summary::after { content: '+'; font-weight: bold; color: var(--primary); font-size: 1.2rem; }
+    details[open] > summary::after { content: '-'; }
+    details[open] > summary { background: #e0e7ff; border-color: #c7d2fe; color: var(--primary-dark); }
+    
+    .student-card { display: grid; grid-template-columns: 30px 1.5fr 1fr 1fr auto; align-items: center; gap: 10px; background: #fff; border: 1px solid var(--border); padding: 10px 16px; margin-bottom: 6px; border-radius: 10px; transition: all 0.2s; }
+    .student-card:hover { border-color: var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.04); }
+    .st-info { font-weight: 700; color: var(--dark); font-size: 0.95rem; }
+    .st-cred { font-size: 0.85rem; color: var(--secondary); background: #f1f5f9; padding: 4px 8px; border-radius: 6px; font-family: monospace; }
+    .st-label { font-size: 0.7rem; color: #94a3b8; display: block; margin-bottom: 2px; }
+    .tree-content { padding: 10px 15px 0 0; border-right: 2px solid #e2e8f0; margin-right: 10px; }
+
+    /* Assignment Cards (Teacher/Level) */
+    .level-card, .teacher-assign-card { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.03); transition: transform 0.2s; display: flex; flex-direction: column; }
+    .level-card:hover, .teacher-assign-card:hover { transform: translateY(-2px); border-color: var(--primary); }
+    
+    .level-header, .teacher-assign-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 12px; margin-bottom: 12px; }
+    .teacher-name-title { font-weight: 800; font-size: 1.1rem; color: var(--dark); display: flex; align-items: center; gap: 10px; }
+    
+    .assign-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+    .group-tag, .assign-tag { background: #f8fafc; padding: 6px 12px; border-radius: 20px; display: flex; align-items: center; gap: 8px; font-size: 0.85rem; border: 1px solid #e2e8f0; }
+    .assign-tag { background: #e0e7ff; color: #4338ca; border-color: #c7d2fe; }
+    .delete-assign { cursor: pointer; color: #ef4444; font-size: 0.9rem; transition: 0.2s; }
+    .delete-assign:hover { transform: scale(1.2); }
+
+    /* Messaging Layout */
+    .msg-layout { display: grid; grid-template-columns: 300px 1fr; gap: 20px; height: 600px; }
+    .msg-sidebar { background: #fff; border: 1px solid var(--border); border-radius: 12px; overflow-y: auto; display: flex; flex-direction: column; }
+    .msg-content { display: flex; flex-direction: column; gap: 15px; height: 100%; background: #fff; border-radius: 12px; border: 1px solid var(--border); padding: 20px; }
+    
+    .msg-item { padding: 15px; border-bottom: 1px solid #f1f5f9; cursor: pointer; transition: 0.2s; position: relative; }
+    .msg-item:hover { background: #f8fafc; }
+    .msg-item.unread { background: #eff6ff; border-left: 4px solid var(--primary); }
+    .msg-item-header { display: flex; justify-content: space-between; margin-bottom: 5px; }
+    .msg-item-name { font-weight: bold; color: var(--dark); }
+    .msg-item-time { font-size: 0.75rem; color: #94a3b8; direction: ltr; }
+    .msg-item-preview { font-size: 0.85rem; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* Chat View Modal */
+    #chatViewContainer { flex: 1; overflow-y: auto; padding: 15px; background: #f8fafc; border-radius: 12px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; }
+    .chat-msg-bubble { max-width: 75%; padding: 10px 15px; border-radius: 12px; position: relative; font-size: 0.9rem; line-height: 1.5; }
+    .chat-msg-bubble.me { align-self: flex-end; background: #e0e7ff; color: #1e1b4b; border-bottom-left-radius: 2px; }
+    .chat-msg-bubble.other { align-self: flex-start; background: #fff; border: 1px solid #e2e8f0; border-bottom-right-radius: 2px; }
+    
+    .admin-chat-footer { display: none; padding-top: 15px; border-top: 1px solid var(--border); gap: 10px; align-items: center; }
+    .admin-chat-footer.active { display: flex; }
+    .admin-chat-input { flex: 1; padding: 12px; border-radius: 20px; border: 1px solid #cbd5e1; outline: none; }
+    .admin-chat-btn { width: 40px; height: 40px; border-radius: 50%; background: var(--primary); color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+    /* Lesson Targets */
+    .lesson-tabs { display: flex; gap: 10px; margin-bottom: 15px; background: #f1f5f9; padding: 5px; border-radius: 10px; }
+    .lesson-tab { flex: 1; text-align: center; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: 0.2s; color: #64748b; }
+    .lesson-tab.active { background: #fff; color: var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+
+    /* Bulk Action Toolbar */
+    .bulk-actions-toolbar { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; flex-wrap: wrap; background: #f8fafc; padding: 10px; border-radius: 10px; border: 1px solid #e2e8f0; }
+    .bulk-select-btn { padding: 6px 12px; font-size: 0.85rem; background: #fff; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; transition: 0.2s; }
+    .bulk-select-btn:hover { border-color: var(--primary); color: var(--primary); }
+
+    .print-only { display: none; }
+
+    /* Print Styles Overhaul - Fixed to print specific content properly */
+    @media print {
+        @page { size: A4; margin: 1cm; }
+        body { background: #fff; color: #000; font-size: 11pt; font-family: 'Tajawal', sans-serif; overflow: visible; height: auto; }
+        
+        /* Hide everything by default */
+        .sidebar, .header, .btn, .hide-print, .search-box, .actions-cell, .nav-btn, .logout-btn, .bulk-actions-toolbar, .admin-chat-footer, .modal { display: none !important; }
+        
+        /* Ensure container flows naturally */
+        .app-wrapper, .container { display: block !important; margin: 0; padding: 0; max-width: 100%; width: 100%; height: auto; min-height: 0; }
+        
+        /* Show only the active content area */
+        .content-area { 
+            display: block !important; 
+            box-shadow: none; 
+            border: 0; 
+            padding: 0; 
+            background: none; 
+            min-height: auto; 
+            margin: 0;
+            width: 100%;
+        }
+        
+        .section-header { 
+            border-bottom: 2px solid #000; 
+            padding-bottom: 10px; 
+            margin-bottom: 20px; 
+            justify-content: center; 
+        }
+        
+        .section-title { 
+            font-size: 1.8rem; 
+            text-align: center; 
+            color: #000;
+        }
+        
+        /* Table Styles for Print */
+        .table-container { 
+            overflow: visible; 
+            border: 1px solid #000; 
+            border-radius: 0; 
+        }
+        
+        .data-table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            border: 1px solid #000; 
+        }
+        
+        .data-table th, .data-table td { 
+            border: 1px solid #000; 
+            padding: 8px; 
+            color: #000; 
+            text-align: right;
+        }
+        
+        .data-table th { background: #f0f0f0 !important; }
+        .data-table tr:hover td { background: none; }
+        
+        /* Specific tweaks for Student/Teacher Lists */
+        details { display: block !important; border: 0; margin-bottom: 10px; }
+        details > summary { list-style: none; padding: 5px 0; border: 0; border-bottom: 1px solid #000; font-weight: bold; font-size: 1.2rem; }
+        details > summary::after { display: none; }
+        details[open] > summary { background: none; }
+        .tree-content { padding: 0; border: 0; margin: 0; display: block !important; }
+        
+        /* Teacher Assignment Cards */
+        #teacherGroupsArea, #teacherSubjectsArea { display: block !important; }
+        .teacher-assign-card { 
+            break-inside: avoid; 
+            page-break-inside: avoid; 
+            border: 1px solid #000; 
+            box-shadow: none; 
+            margin-bottom: 20px; 
+            display: block !important;
+        }
+        .teacher-assign-header { border-bottom: 1px solid #000; }
+        .assign-tag { border: 1px solid #000; color: #000; background: none; }
+
+        /* Enable Print Only Table for Students */
+        .print-only { display: table !important; width: 100%; }
+        #stArea details { display: none !important; } /* Hide the interactive tree in print */
+        
+        /* Improved Links Table Printing */
+        #linksTable { width: 100% !important; border: 1px solid #000 !important; }
+        #linksTable th, #linksTable td { border: 1px solid #000 !important; }
+    }
+    
+    /* Responsive Design Fixes */
+    @media (max-width: 768px) {
+        .container { grid-template-columns: 1fr; }
+        .sidebar { position: static; height: auto; max-height: 300px; margin-bottom: 20px; }
+        .msg-layout { grid-template-columns: 1fr; }
+        .msg-sidebar { height: 200px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Login Overlay -->
+<div id="adminLoginOverlay">
+    <div class="login-box" id="loginBoxContent">
+        <i class="fas fa-shield-alt"></i>
+        <h2>دخول المسؤول</h2>
+        <form id="adminLoginForm">
+            <div class="form-group"><input type="password" id="adminPassword" placeholder="كلمة المرور" required style="text-align:center"></div>
+            <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center">دخول</button>
+            <div style="margin-top:15px;font-size:0.9rem;"><a href="#" onclick="showForgotPassword()" style="color:var(--secondary)">نسيت كلمة المرور؟</a></div>
+        </form>
+    </div>
+    <div class="login-box" id="forgotPasswordBox" style="display:none">
+        <h3>استعادة كلمة المرور</h3>
+        <form id="forgotPasswordForm">
+            <div class="form-group"><input type="email" id="resetEmail" placeholder="you@school.com" required style="text-align:center"></div>
+            <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center">إرسال الرابط</button>
+            <button type="button" class="btn" onclick="showLoginBox()" style="width:100%;justify-content:center;margin-top:10px;background:none;color:var(--secondary)">عودة</button>
+        </form>
+    </div>
+    <div class="login-box" id="resetPasswordBox" style="display:none">
+        <h3>تعيين كلمة مرور جديدة</h3>
+        <form id="resetPasswordForm">
+            <input type="hidden" id="resetToken">
+            <div class="form-group"><input type="password" id="newResetPass" placeholder="كلمة المرور الجديدة" required style="text-align:center"></div>
+            <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center">حفظ</button>
+        </form>
+    </div>
+</div>
+
+<!-- Main Application Wrapper -->
+<div class="app-wrapper" id="appWrapper">
+    <div class="header">
+      <div class="brand"><i class="fas fa-graduation-cap fa-lg"></i> المنصة التعليمية</div>
+      <button onclick="logoutAdmin()" class="logout-btn"><i class="fas fa-sign-out-alt"></i> خروج</button>
+    </div>
+
+    <div class="container">
+      <!-- Sidebar Navigation -->
+      <div class="sidebar">
+        <button class="nav-btn active" onclick="showSection('dashboard')"><i class="fas fa-chart-pie"></i> لوحة المعلومات</button>
+        <button class="nav-btn" onclick="showSection('chats')"><i class="fas fa-comments"></i> مراقبة الدردشات</button>
+        <button class="nav-btn" onclick="showSection('chat_groups')"><i class="fas fa-users-cog"></i> مجموعات الدردشة</button>
+        <button class="nav-btn" id="btnMsg" onclick="showSection('messages')">
+            <i class="fas fa-envelope"></i> المراسلة
+            <span class="nav-badge" id="msgBadge"></span>
+        </button>
+        <button class="nav-btn" onclick="showSection('teachers')"><i class="fas fa-chalkboard-teacher"></i> إدارة الأساتذة</button>
+        <button class="nav-btn" onclick="showSection('students')"><i class="fas fa-user-graduate"></i> إدارة الطالبات</button>
+        <button class="nav-btn" onclick="showSection('levels')"><i class="fas fa-layer-group"></i> المستويات والأفواج</button>
+        <button class="nav-btn" onclick="showSection('subjects')"><i class="fas fa-book"></i> المواد الدراسية</button>
+        <button class="nav-btn" onclick="showSection('all_lessons')"><i class="fas fa-file-alt"></i> إدارة الدروس</button>
+        <button class="nav-btn" onclick="showSection('teacher_subjects')"><i class="fas fa-briefcase"></i> تخصصات الأساتذة</button>
+        <button class="nav-btn" onclick="showSection('teacher_groups')"><i class="fas fa-users"></i> نطاق التدريس</button>
+        <button class="nav-btn" onclick="showSection('links')"><i class="fas fa-link"></i> ربط الطالبات</button>
+        <button class="nav-btn" onclick="showSection('add_lesson')"><i class="fas fa-cloud-upload-alt"></i> رفع درس (إداري)</button>
+        <button class="nav-btn" onclick="showSection('settings')"><i class="fas fa-cog"></i> الإعدادات</button>
+      </div>
+
+      <!-- Main Content Area -->
+      <div class="content-area" id="mainContent">
+          <!-- Dynamic Content Loaded via JS -->
+      </div>
+    </div>
+</div>
+
+<!-- ================= MODALS ================= -->
+
+<!-- Chat View Modal -->
+<div id="modalChatView" class="modal">
+    <div class="modal-content" style="width: 700px;">
+        <div class="modal-header">
+            <h3 class="modal-title" id="chatViewTitle">سجل المحادثة</h3>
+            <button onclick="closeModals()" class="close-modal">&times;</button>
+        </div>
+        <div id="chatViewContainer"></div>
+        <!-- Admin Participation Footer -->
+        <div class="admin-chat-footer" id="adminChatFooter">
+            <button class="btn btn-sm btn-print" onclick="document.getElementById('adminFileInput').click()"><i class="fas fa-paperclip"></i></button>
+            <input type="file" id="adminFileInput" style="display:none" onchange="uploadAdminFile()">
+            <input type="text" class="admin-chat-input" id="adminChatInput" placeholder="اكتب رسالة بصفتك الإدارة...">
+            <button class="admin-chat-btn" onclick="sendAdminMsg()"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+</div>
+
+<!-- View Group Members Modal -->
+<div id="modalGroupMembersView" class="modal">
+    <div class="modal-content" style="width: 450px">
+        <div class="modal-header">
+            <h3 class="modal-title">أعضاء المجموعة</h3>
+            <button onclick="closeModals()" class="close-modal">&times;</button>
+        </div>
+        <div id="groupMembersListContainer" style="max-height: 400px; overflow-y: auto;">
+        </div>
+    </div>
+</div>
+
+<!-- Chat Group Modal -->
+<div id="modalChatGroup" class="modal">
+    <div class="modal-content" style="width: 650px; max-width:98%">
+        <div class="modal-header">
+            <h3 class="modal-title" id="cgTitle">مجموعة دردشة</h3>
+            <button onclick="closeModals()" class="close-modal">&times;</button>
+        </div>
+        <form id="formChatGroup">
+            <input type="hidden" id="cgId">
+            <div class="form-group">
+                <label>اسم المجموعة</label>
+                <input type="text" id="cgName" required>
+            </div>
+            
+            <div class="form-group" style="display:grid;grid-template-columns:1fr 1fr; gap:10px">
+                <label style="cursor:pointer;display:flex;align-items:center;gap:10px;font-weight:bold;background:#f8fafc;padding:10px;border-radius:10px;border:1px solid #e2e8f0;font-size:0.85rem">
+                    <input type="checkbox" id="cgAllowPrivate" style="width:18px;height:18px;cursor:pointer"> 
+                    السماح بالخاص
+                </label>
+                <label style="cursor:pointer;display:flex;align-items:center;gap:10px;font-weight:bold;background:#fff1f2;padding:10px;border-radius:10px;border:1px solid #e2e8f0;font-size:0.85rem">
+                    <input type="checkbox" id="cgOnlyAdmins" style="width:18px;height:18px;cursor:pointer;accent-color:#ef4444"> 
+                    النشر للمسؤولين فقط
+                </label>
+            </div>
+
+            <div class="form-group" id="cgMembersDiv">
+                <label>أعضاء المجموعة</label>
+                <div class="bulk-list" id="cgMembersList" style="padding:10px;background:#f8fafc"></div>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%" id="cgSubmitBtn">حفظ المجموعة</button>
+        </form>
+    </div>
+</div>
+
+<!-- Teacher Modal -->
+<div id="modalTeacher" class="modal">
+    <div class="modal-content">
+        <div class="modal-header"><h3>إضافة أستاذ</h3><button onclick="closeModals()" class="close-modal">&times;</button></div>
+        <form id="formTeacher">
+            <input type="hidden" id="tId">
+            <div class="form-group"><label>الاسم</label><input type="text" id="tName" required></div>
+            <div class="form-group"><label>اسم المستخدم</label><input type="text" id="tUser" required onfocus="generateTeacherData()"></div>
+            <div class="form-group"><label>الهاتف</label><input type="text" id="tPhone" onfocus="generateTeacherData()"></div>
+            <button class="btn btn-primary" style="width:100%">حفظ</button>
+        </form>
+    </div>
+</div>
+
+<!-- Student Modal -->
+<div id="modalStudent" class="modal">
+    <div class="modal-content">
+        <div class="modal-header"><h3>إضافة طالبة</h3><button onclick="closeModals()" class="close-modal">&times;</button></div>
+        <form id="formStudent">
+            <input type="hidden" id="sId">
+            <div class="form-group"><label>الاسم</label><input type="text" id="sName" required></div>
+            <div class="form-group"><label>اسم المستخدم</label><input type="text" id="sUser" required></div>
+            <div class="form-group"><label>المستوى</label><select id="sLevel" onchange="updateGroupOptions()"></select></div>
+            <div class="form-group" id="sGroupDiv"><label>الفوج</label><select id="sGroup"></select></div>
+            <div class="form-group">
+                <label>كلمة المرور</label>
+                <input type="password" id="sPassword" placeholder="اتركها فارغة لعدم التغيير (افتراضي: رقم التسجيل)">
+            </div>
+            <button class="btn btn-primary" style="width:100%">حفظ</button>
+        </form>
+    </div>
+</div>
+
+<!-- Subject, Level, Group Modals -->
+<div id="modalSubject" class="modal"><div class="modal-content"><div class="modal-header"><h3>إضافة مادة</h3><button onclick="closeModals()" class="close-modal">&times;</button></div><form id="formSubject"><input type="hidden" id="subId"><div class="form-group"><label>الاسم</label><input type="text" id="subName" required></div><div class="form-group"><label>الوصف</label><input type="text" id="subDesc"></div><button class="btn btn-primary" style="width:100%">حفظ</button></form></div></div>
+<div id="modalLevel" class="modal"><div class="modal-content"><div class="modal-header"><h3>إضافة مستوى</h3><button onclick="closeModals()" class="close-modal">&times;</button></div><form id="formLevel"><input type="hidden" id="lvlId"><div class="form-group"><label>الاسم</label><input type="text" id="lvlName" required></div><button class="btn btn-primary" style="width:100%">حفظ</button></form></div></div>
+<div id="modalGroup" class="modal"><div class="modal-content"><div class="modal-header"><h3>إضافة فوج</h3><button onclick="closeModals()" class="close-modal">&times;</button></div><form id="formGroup"><input type="hidden" id="grpId"><input type="hidden" id="grpLevelId"><div class="form-group"><label>الاسم</label><input type="text" id="grpName" required></div><button class="btn btn-primary" style="width:100%">حفظ</button></form></div></div>
+
+<!-- Assignments Modals -->
+<div id="modalBulkSubjects" class="modal"><div class="modal-content"><div class="modal-header"><h3>تخصصات الأستاذ</h3><button onclick="closeModals()" class="close-modal">&times;</button></div><form id="formBulkSubjects"><input type="hidden" id="bulkSubjTeacherId"><div class="form-group"><label>حدد المواد التي يدرسها هذا الأستاذ:</label><div class="bulk-list" id="bulkSubjectsList"></div></div><button class="btn btn-primary" style="width:100%">إسناد المواد</button></form></div></div>
+<div id="modalBulkGroups" class="modal"><div class="modal-content"><div class="modal-header"><h3>أفواج الأستاذ</h3><button onclick="closeModals()" class="close-modal">&times;</button></div><form id="formBulkGroups"><input type="hidden" id="bulkGrpTeacherId"><div class="form-group"><label>حدد الأفواج:</label><div class="bulk-list" id="bulkGroupsList"></div></div><button class="btn btn-primary" style="width:100%">إسناد الأفواج</button></form></div></div>
+
+<div id="modalTeacherIndividualStudents" class="modal">
+    <div class="modal-content">
+        <div class="modal-header"><h3 id="mtisTitle">إسناد طالبات للأستاذ (تدريس)</h3><button onclick="closeModals()" class="close-modal">&times;</button></div>
+        <div style="background:#f0f9ff;padding:10px;border-radius:8px;border:1px solid #bae6fd;margin-bottom:15px;color:#0369a1;font-size:0.9rem">
+            هؤلاء الطالبات سيظهرن للأستاذ عند رفع الدروس (نطاق خاص).
+        </div>
+        <form id="formTeacherIndividualStudents">
+            <input type="hidden" id="mtisTeacherId">
+            <div class="form-group">
+                <input type="text" placeholder="بحث عن طالبة..." oninput="filterTeacherIndividualStudents(this.value)" style="width:100%;padding:8px;border-radius:8px;border:1px solid #ddd;margin-bottom:5px">
+                <div class="bulk-list" id="mtisList"></div>
+            </div>
+            <button class="btn btn-primary" style="width:100%">حفظ الطالبات</button>
+        </form>
+    </div>
+</div>
+
+<!-- Import Modal -->
+<div id="modalImport" class="modal">
+    <div class="modal-content">
+        <div class="modal-header"><h3>استيراد من Excel</h3><button onclick="closeModals()" class="close-modal">&times;</button></div>
+        <p id="importHint" style="font-size:0.9rem;color:#666;margin-bottom:15px;line-height:1.5;background:#f8fafc;padding:10px;border-radius:8px;border:1px solid #e2e8f0"></p>
+        <form id="formImport">
+            <input type="hidden" id="importType">
+            <div style="margin-bottom:20px"><input type="file" id="importFile" accept=".xlsx,.xls" required style="width:100%"></div>
+            <div style="display:flex;justify-content:flex-end;gap:10px">
+                <button type="button" class="btn" onclick="closeModals()" style="background:#f1f5f9;color:#475569">إلغاء</button>
+                <button class="btn btn-success">رفع الملف</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Usage Stats Modal -->
+<div id="modalUsageStats" class="modal">
+    <div class="modal-content" style="width:600px;max-width:95%">
+        <div class="modal-header"><h3>إحصائيات الاستخدام</h3><button onclick="closeModals()" class="close-modal">&times;</button></div>
+        <div style="max-height:400px;overflow-y:auto">
+            <table class="data-table">
+                <thead><tr><th>المستخدم</th><th>النوع</th><th>مرات الدخول</th><th>آخر ظهور</th></tr></thead>
+                <tbody id="usageStatsBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ====== SCRIPTS ====== -->
+<script>
+const API = '/api';
+let allLevels = [], allGroups = [], adminUser = null;
+let currentChatId = null, currentChatGroup = false;
+let bulkSelectedStudents = new Set(); // Store selected IDs for linking
+let allStudentsCache = []; // Cache for students list
+let allTeachersCache = []; // Cache for teachers
+let activeAdminChatUser = null;
+let allLinksCache = []; // Store for link filtering
+
+// Caching for Scope
+let scopeData = { groups: [], manual: [], teachers: [] };
+
+document.addEventListener('DOMContentLoaded', () => {
+    checkUrlForResetToken();
+    const token = sessionStorage.getItem('adminToken');
+    if (token) verifyAdminSession(token); else document.getElementById('adminLoginOverlay').style.display = 'flex';
+    
+    // Poll for notifications
+    setInterval(checkAdminMessages, 10000);
+    
+    // Auto username generation
+    const sUserInput = document.getElementById('sUser');
+    if (sUserInput) {
+        sUserInput.addEventListener('focus', function() {
+            if(!this.value && !document.getElementById('sId').value) {
+                this.value = 's_' + Math.floor(Math.random() * 1000000);
+            }
+        });
+    }
+});
+
+// Authentication & Session
+function checkUrlForResetToken() { const p = new URLSearchParams(window.location.search); if(p.get('reset')) { document.getElementById('adminLoginOverlay').style.display='flex'; document.getElementById('loginBoxContent').style.display='none'; document.getElementById('resetPasswordBox').style.display='block'; document.getElementById('resetToken').value=p.get('reset'); }}
+async function verifyAdminSession(token) { try { const u = JSON.parse(token); if(u && u.type==='admin') { adminUser = u; document.getElementById('adminLoginOverlay').style.display='none'; document.getElementById('appWrapper').style.display='flex'; refreshLevelsCache(); refreshGroupsCache(); showSection('dashboard'); checkAdminMessages(); } else throw new Error(); } catch(e) { sessionStorage.removeItem('adminToken'); document.getElementById('adminLoginOverlay').style.display='flex'; } }
+document.getElementById('adminLoginForm').addEventListener('submit', async (e)=>{ e.preventDefault(); try{ const res=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:'admin',password:document.getElementById('adminPassword').value})}); const d=await res.json(); if(d.success&&d.user.type==='admin'){ sessionStorage.setItem('adminToken',JSON.stringify(d.user)); location.reload(); }else alert('خطأ في البيانات'); }catch(e){alert('خطأ في الاتصال');} });
+function logoutAdmin() { sessionStorage.removeItem('adminToken'); location.reload(); }
+function showForgotPassword() { document.getElementById('loginBoxContent').style.display='none'; document.getElementById('forgotPasswordBox').style.display='block'; }
+function showLoginBox() { document.getElementById('forgotPasswordBox').style.display='none'; document.getElementById('loginBoxContent').style.display='block'; }
+document.getElementById('forgotPasswordForm').addEventListener('submit', async(e)=>{e.preventDefault(); const res=await fetch('/api/auth/forgot-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:document.getElementById('resetEmail').value})}); const d=await res.json(); if(d.success) d.link ? prompt('انسخ الرابط:', d.link) : alert(d.message); else alert(d.error); });
+document.getElementById('resetPasswordForm').addEventListener('submit', async(e)=>{e.preventDefault(); const res=await fetch('/api/auth/reset-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:document.getElementById('resetToken').value, newPassword:document.getElementById('newResetPass').value})}); if(res.ok){ alert('تم التغيير'); location.href='/admin'; } else alert('خطأ'); });
+
+// Caching Helpers
+async function refreshLevelsCache() { try{allLevels=await (await fetch(`${API}/levels`)).json();}catch(e){} }
+async function refreshGroupsCache() { try{allGroups=await (await fetch(`${API}/groups`)).json();}catch(e){} }
+
+// Notifications
+async function checkAdminMessages() {
+    try {
+        const res = await fetch(`${API}/admin/inbox-summary`);
+        const data = await res.json();
+        const unread = data.reduce((acc, curr) => acc + (curr.unread_count || 0), 0);
+        const badge = document.getElementById('msgBadge');
+        if(unread > 0) {
+            badge.innerText = unread > 99 ? '99+' : unread;
+            badge.classList.add('active'); 
+        } else {
+            badge.classList.remove('active');
+        }
+    } catch(e) {}
+}
+
+// Navigation Logic
+function showSection(id) {
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    const map = { 'dashboard':0, 'chats':1, 'chat_groups':2, 'messages':3, 'teachers':4, 'students':5, 'levels':6, 'subjects':7, 'all_lessons':8, 'teacher_subjects':9, 'teacher_groups':10, 'links':11, 'add_lesson':12, 'settings': 13 };
+    const btn = document.querySelectorAll('.nav-btn')[map[id]];
+    if(btn) btn.classList.add('active');
+    
+    document.getElementById('mainContent').innerHTML = '<div style="padding:50px;text-align:center"><i class="fas fa-circle-notch fa-spin fa-3x" style="color:var(--primary)"></i></div>';
+    
+    // Execute specific loading function based on section
+    setTimeout(async () => {
+        try {
+            switch(id) {
+                case 'dashboard': await loadDashboard(); break;
+                case 'chats': await loadChats(); break;
+                case 'chat_groups': await loadChatGroups(); break;
+                case 'messages': await loadAdminMessages(); break;
+                case 'teachers': await loadTeachers(); break;
+                case 'students': await loadStudents(); break;
+                case 'levels': await loadLevels(); break;
+                case 'subjects': await loadSubjects(); break;
+                case 'all_lessons': await loadAllLessons(); break;
+                case 'teacher_subjects': await loadTeacherSubjects(); break;
+                case 'teacher_groups': await loadTeacherGroups(); break;
+                case 'links': await loadLinks(); break;
+                case 'add_lesson': await loadAddLesson(); break;
+                case 'settings': loadSettings(); break;
+            }
+        } catch(e) { console.error(e); document.getElementById('mainContent').innerHTML = '<div style="color:red;text-align:center">حدث خطأ في تحميل الصفحة</div>'; }
+    }, 100);
+}
+
+// ================= SECTION LOGIC =================
+
+// 1. Dashboard
+async function loadDashboard() {
+    const data = await (await fetch(`${API}/admin/stats`)).json();
+    document.getElementById('mainContent').innerHTML = `
+        <div class="section-header"><h2 class="section-title">لوحة المعلومات</h2></div>
+        <div class="stats-grid">
+            <div class="stat-card" onclick="showUsageStats()">
+                <div class="stat-icon" style="background:#dbeafe;color:#1d4ed8"><i class="fas fa-users"></i></div>
+                <div class="stat-num">${data.active_users || 0}</div>
+                <div class="stat-label">المستخدمين النشطين (طالبات)</div>
+            </div>
+            <div class="stat-card" onclick="showSection('teachers')">
+                <div class="stat-icon" style="background:#e0e7ff;color:#4f46e5"><i class="fas fa-chalkboard-teacher"></i></div>
+                <div class="stat-num">${data.teachers || 0}</div>
+                <div class="stat-label">الأساتذة</div>
+            </div>
+            <div class="stat-card" onclick="showSection('students')">
+                <div class="stat-icon" style="background:#fce7f3;color:#db2777"><i class="fas fa-user-graduate"></i></div>
+                <div class="stat-num">${data.students || 0}</div>
+                <div class="stat-label">الطالبات</div>
+            </div>
+            <div class="stat-card" onclick="showSection('chats')">
+                <div class="stat-icon" style="background:#f1f5f9;color:#475569"><i class="fas fa-comments"></i></div>
+                <div class="stat-num">${data.messages || 0}</div>
+                <div class="stat-label">الرسائل</div>
+            </div>
+            <div class="stat-card" onclick="showSection('subjects')">
+                <div class="stat-icon" style="background:#dcfce7;color:#16a34a"><i class="fas fa-book"></i></div>
+                <div class="stat-num">${data.subjects || 0}</div>
+                <div class="stat-label">المواد</div>
+            </div>
+            <div class="stat-card" onclick="showSection('links')">
+                <div class="stat-icon" style="background:#fef3c7;color:#d97706"><i class="fas fa-link"></i></div>
+                <div class="stat-num">${data.links || 0}</div>
+                <div class="stat-label">الروابط</div>
+            </div>
+            <div class="stat-card" onclick="showSection('all_lessons')">
+                <div class="stat-icon" style="background:#e0f2fe;color:#0ea5e9"><i class="fas fa-file-alt"></i></div>
+                <div class="stat-num">${data.lessons || 0}</div>
+                <div class="stat-label">الدروس</div>
+            </div>
+        </div>
+    `;
+}
+
+async function showUsageStats() {
+    const data = await (await fetch(`${API}/admin/usage-stats`)).json();
+    const tbody = document.getElementById('usageStatsBody');
+    tbody.innerHTML = data.map(u => {
+        // Fix: Explicitly check for admin type
+        let typeLabel = 'طالبة';
+        if (u.type === 'teacher') typeLabel = 'أستاذ';
+        else if (u.type === 'admin') typeLabel = 'مسؤول';
+        
+        return `
+        <tr>
+            <td>${u.name}</td>
+            <td>${typeLabel}</td>
+            <td>${u.login_count}</td>
+            <td style="direction:ltr">${u.last_login ? new Date(u.last_login).toLocaleString() : '-'}</td>
+        </tr>
+    `}).join('');
+    document.getElementById('modalUsageStats').style.display = 'flex';
+}
+
+// 2. Chat Monitoring & Admin Participation (Previous code)
+async function loadChats() {
+    const data = await (await fetch(`${API}/admin/conversations`)).json();
+    
+    // Sort by most recent activity
+    data.sort((a,b) => new Date(b.last_message_at) - new Date(a.last_message_at));
+
+    let html = `<div class="section-header"><h2 class="section-title">مراقبة الدردشات</h2></div><div class="table-container"><table class="data-table"><thead><tr><th>الأطراف</th><th>عدد الرسائل</th><th>آخر نشاط</th><th>إجراء</th></tr></thead><tbody>`;
+    data.forEach(row => {
+        const u1 = row.group_id ? `<b>[مجموعة] ${row.group_name}</b>` : `${row.user1_name} (${row.user1_type})`;
+        const u2 = row.group_id ? '-' : `${row.user2_name} (${row.user2_type})`;
+        const args = row.group_id ? `null, null, null, null, ${row.group_id}, '${row.group_name.replace(/'/g,"\\'")}'` : `${row.user1_id}, ${row.user2_id}, '${row.user1_name.replace(/'/g,"\\'")}', '${row.user2_name.replace(/'/g,"\\'")}'`;
+        html += `<tr><td>${u1} ${!row.group_id ? '↔ ' + u2 : ''}</td><td>${row.msg_count}</td><td style="direction:ltr;text-align:right">${new Date(row.last_message_at).toLocaleString()}</td><td><button onclick="viewChat(${args})" class="action-icon icon-view"><i class="fas fa-eye"></i></button></td></tr>`;
+    });
+    html += `</tbody></table></div>`;
+    document.getElementById('mainContent').innerHTML = html;
+}
+
+// Update View Chat to use correct File URL (Chat Files endpoint)
+async function viewChat(u1, u2, n1, n2, gid=null, gname=null, mode=null) {
+    currentChatId = gid ? gid : { u1, u2 };
+    currentChatGroup = !!gid;
+    document.getElementById('chatViewTitle').innerText = gid ? `مجموعة: ${gname}` : `${n1} ↔ ${n2}`;
+    
+    if(!gid && mode === 'live') {
+        activeAdminChatUser = (u1 === adminUser.id) ? u2 : u1;
+        document.getElementById('adminChatFooter').classList.add('active');
+        await fetch('/api/conversation/mark-read', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ sender_id: activeAdminChatUser, reader_id: adminUser.id })
+        });
+        const item = document.getElementById(`msg_item_${activeAdminChatUser}`);
+        if(item && item.classList.contains('unread')) {
+            item.classList.remove('unread');
+            const badge = item.querySelector('.msg-unread-badge');
+            if(badge) badge.remove();
+            checkAdminMessages();
+        }
+    } else {
+        document.getElementById('adminChatFooter').classList.remove('active');
+    }
+
+    const container = document.getElementById('chatViewContainer');
+    container.innerHTML = '<div style="text-align:center;padding:20px">جاري التحميل...</div>';
+    document.getElementById('modalChatView').style.display = 'flex';
+
+    try {
+        const url = gid ? `${API}/chat-groups/${gid}/messages` : `${API}/conversation/${u1}/${u2}`;
+        const msgs = await (await fetch(url)).json();
+        container.innerHTML = '';
+        
+        if(!msgs.length) container.innerHTML = '<div style="text-align:center;padding:20px;color:#999">لا توجد رسائل</div>';
+        
+        msgs.forEach(m => {
+            const isMe = m.sender_id === adminUser.id;
+            const div = document.createElement('div');
+            div.className = `chat-msg-bubble ${isMe ? 'me' : 'other'}`;
+            
+            let content = m.message_text;
+            if (m.message_type === 'file') {
+                // UPDATE: Use /api/chat/files/ for general chat messages
+                content = `<a href="/api/chat/files/${encodeURIComponent(m.file_path)}" target="_blank" style="color:inherit;text-decoration:underline"><i class="fas fa-paperclip"></i> ${m.file_name}</a>`;
+            }
+            
+            div.innerHTML = `
+                <div style="font-size:0.75rem;font-weight:bold;margin-bottom:4px;display:flex;justify-content:space-between">
+                    <span>${m.sender_name || 'System'}</span>
+                    <i class="fas fa-trash" style="color:#ef4444;cursor:pointer;margin-right:5px" title="حذف الرسالة" onclick="deleteSingleMsg(${m.id})"></i>
+                </div>
+                <div>${content || ''}</div>
+                <div style="font-size:0.65rem;opacity:0.7;margin-top:4px;direction:ltr;text-align:left">${new Date(m.sent_at).toLocaleTimeString()}</div>
+            `;
+            container.appendChild(div);
+        });
+        container.scrollTop = container.scrollHeight;
+    } catch(e) { container.innerHTML = 'خطأ في التحميل'; }
+}
+
+async function deleteSingleMsg(id) {
+    // استخدمنا confirm و prompt للتحقق
+    if(!confirm("هل أنت متأكد من حذف هذه الرسالة؟\nسيُطلب منك كلمة مرور المسؤول.")) return;
+    const password = prompt("أدخل كلمة مرور المسؤول:");
+    if (!password) return;
+    
+    try {
+        const res = await fetch('/api/admin/message/delete', { 
+            method: 'POST', 
+            headers: {'Content-Type': 'application/json'}, 
+            body: JSON.stringify({id, password}) 
+        });
+        
+        const d = await res.json();
+        if(d.success) { 
+            alert('تم الحذف بنجاح');
+            // إعادة تحميل المحادثة المفتوحة حالياً
+            const title = document.getElementById('chatViewTitle').innerText;
+            if (title.includes('↔')) {
+                // محادثة خاصة
+                const parts = title.split('↔');
+                const u1 = currentChatId.u1; 
+                const u2 = currentChatId.u2;
+                viewChat(u1, u2, parts[0].trim(), parts[1].trim(), null, null, document.getElementById('adminChatFooter').classList.contains('active') ? 'live' : null);
+            } else {
+                // مجموعة
+                document.getElementById('modalChatView').style.display = 'none'; // Close for simplicity
+                loadChats();
+            }
+        } else {
+            alert('خطأ: ' + (d.error || 'كلمة المرور غير صحيحة'));
+        }
+    } catch(e) { 
+        console.error(e);
+        alert('خطأ في الاتصال'); 
+    }
+}
+
+async function sendAdminMsg() {
+    const txt = document.getElementById('adminChatInput').value;
+    if(!txt) return;
+    await fetch(`${API}/message/send`, {method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ sender_id: adminUser.id, receiver_id: activeAdminChatUser, message_text: txt })});
+    document.getElementById('adminChatInput').value = '';
+    const parts = document.getElementById('chatViewTitle').innerText.split('↔');
+    const name = parts.length > 1 ? parts[1].trim() : ''; 
+    viewChat(adminUser.id, activeAdminChatUser, 'أنا', name, null, null, 'live');
+}
+
+async function uploadAdminFile() {
+    const file = document.getElementById('adminFileInput').files[0];
+    if(!file) return;
+    const fd = new FormData(); fd.append('file', file); fd.append('sender_id', adminUser.id); fd.append('receiver_id', activeAdminChatUser);
+    await fetch(`${API}/message/upload`, {method:'POST', body:fd});
+    const parts = document.getElementById('chatViewTitle').innerText.split('↔');
+    const name = parts.length > 1 ? parts[1].trim() : ''; 
+    viewChat(adminUser.id, activeAdminChatUser, 'أنا', name, null, null, 'live');
+}
+
+async function loadAdminMessages() {
+    const [teachers, inbox] = await Promise.all([
+        fetch(`${API}/teachers/all`).then(r=>r.json()),
+        fetch(`${API}/admin/inbox-summary`).then(r=>r.json())
+    ]);
+    
+    const inboxHtml = inbox.length ? inbox.map(i => `
+        <div class="msg-item ${i.unread_count > 0 ? 'unread' : ''}" id="msg_item_${i.id}" onclick="openAdminChat(${i.id}, '${i.name.replace(/'/g,"\\'")}')">
+            <div class="msg-item-header">
+                <span class="msg-item-name">${i.name}</span>
+                <span class="msg-item-time">${new Date(i.last_time).toLocaleTimeString()}</span>
+            </div>
+            <div class="msg-item-preview">${i.last_message || 'مرفق'}</div>
+            ${i.unread_count > 0 ? `<div class="msg-unread-badge" style="margin-top:5px;font-size:0.75rem;color:#ef4444;font-weight:bold">${i.unread_count} رسائل جديدة</div>` : ''}
+        </div>
+    `).join('') : '<div style="padding:20px;color:#999;text-align:center">لا توجد رسائل واردة</div>';
+
+    document.getElementById('mainContent').innerHTML = `
+        <div class="section-header"><h2 class="section-title">المراسلة مع الأساتذة</h2></div>
+        <div class="msg-layout">
+            <div style="background:#fff;padding:20px;border-radius:12px;border:1px solid #e2e8f0;display:flex;flex-direction:column">
+                <h3 style="margin-top:0">رسالة جديدة</h3>
+                <div class="form-group">
+                    <label>تحديد المستلمين</label>
+                    <!-- Search Input -->
+                    <input type="text" placeholder="بحث عن أستاذ..." 
+                           style="width:100%;padding:8px;margin-bottom:8px;border:1px solid #ddd;border-radius:8px" 
+                           oninput="filterAdminMsgRecipients(this.value)">
+                           
+                    <div class="bulk-list" style="height:200px" id="msgRecipients">
+                        ${teachers.map(t => `<div class="bulk-item recipient-item" data-name="${t.name}"><input type="checkbox" id="mt_${t.id}" value="${t.id}"><label for="mt_${t.id}">${t.name}</label></div>`).join('')}
+                    </div>
+                    <div style="display:flex;gap:5px;margin-top:5px">
+                        <button class="btn btn-sm btn-print" onclick="document.querySelectorAll('#msgRecipients input:not([style*=\\'display: none\\'])').forEach(c=>c.checked=true)">تحديد الكل</button>
+                        <button class="btn btn-sm btn-print" onclick="document.querySelectorAll('#msgRecipients input').forEach(c=>c.checked=false)">إلغاء التحديد</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>الرسالة</label>
+                    <textarea id="adminMsgText" rows="3" style="resize:none" placeholder="نص الرسالة..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>إرفاق ملف (اختياري)</label>
+                    <input type="file" id="broadcastFile">
+                </div>
+                <button class="btn btn-primary" onclick="sendAdminBroadcast()">إرسال الرسالة</button>
+            </div>
+            
+            <div style="background:#fff;padding:0;border-radius:12px;border:1px solid #e2e8f0;display:flex;flex-direction:column;overflow:hidden">
+                <h3 style="margin:20px 20px 10px 20px">البريد الوارد</h3>
+                <div class="msg-sidebar" style="border:0;flex:1;border-radius:0">
+                    ${inboxHtml}
+                </div>
+            </div>
+        </div>
+    `;
+    document.getElementById('msgBadge').classList.remove('active');
+}
+
+function filterAdminMsgRecipients(term) {
+    term = term.toLowerCase();
+    document.querySelectorAll('.recipient-item').forEach(item => {
+        const name = item.getAttribute('data-name').toLowerCase();
+        item.style.display = name.includes(term) ? 'grid' : 'none';
+    });
+}
+
+async function openAdminChat(tid, tname) {
+    activeAdminChatUser = tid;
+    await viewChat(adminUser.id, tid, 'أنا', tname, null, null, 'live');
+}
+
+async function sendAdminBroadcast() {
+    const text = document.getElementById('adminMsgText').value;
+    const file = document.getElementById('broadcastFile').files[0];
+    const recipients = Array.from(document.querySelectorAll('#msgRecipients input:checked')).map(c => c.value);
+    
+    if((!text && !file) || !recipients.length) return alert('يجب اختيار مستلمين وكتابة رسالة أو إرفاق ملف');
+    if(!confirm(`هل أنت متأكد من إرسال الرسالة إلى ${recipients.length} مستلم؟`)) return;
+    
+    const fd = new FormData();
+    fd.append('sender_id', adminUser.id);
+    fd.append('recipients', JSON.stringify(recipients));
+    if(text) fd.append('message_text', text);
+    if(file) fd.append('file', file);
+    
+    try {
+        const res = await fetch(`${API}/admin/broadcast`, {method: 'POST', body: fd});
+        if(res.ok) { 
+            alert('تم الإرسال بنجاح'); 
+            loadAdminMessages(); 
+        } else alert('حدث خطأ');
+    } catch(e) { alert('خطأ في الاتصال'); }
+}
+
+// 4. Chat Groups (Updated with Search & Select All & Student Admin & Fix Edit Values)
+async function loadChatGroups() {
+    const groups = await (await fetch(`${API}/chat-groups`)).json();
+    let html = `
+        <div class="section-header">
+            <h2 class="section-title">مجموعات الدردشة</h2>
+            <div style="display:flex;gap:10px">
+                <button onclick="openChatGroupModal()" class="btn btn-primary"><i class="fas fa-plus"></i> مجموعة جديدة</button>
+            </div>
+        </div>
+        <div class="table-container">
+            <table class="data-table">
+                <thead><tr><th>اسم المجموعة</th><th>الأعضاء</th><th>إعدادات</th><th>تاريخ الإنشاء</th><th>إجراء</th></tr></thead>
+                <tbody>
+    `;
+    groups.forEach(g => {
+        const s1 = g.allow_private_chat ? '<span style="color:#10b981;font-size:0.8rem">الخاص: متاح</span>' : '<span style="color:#ef4444;font-size:0.8rem">الخاص: ممنوع</span>';
+        const s2 = g.only_admins_can_send ? '<span style="color:#ef4444;font-size:0.8rem">النشر: مقيد</span>' : '<span style="color:#10b981;font-size:0.8rem">النشر: للجميع</span>';
+        const memberCountBtn = `<a href="javascript:void(0)" onclick="viewGroupMembers(${g.id})" style="font-weight:bold;color:var(--primary);text-decoration:none">${g.member_count}</a>`;
+
+        html += `<tr>
+            <td>${g.name}</td>
+            <td>${memberCountBtn}</td>
+            <td>${s1}<br>${s2}</td>
+            <td style="direction:ltr;text-align:right">${new Date(g.created_at).toLocaleDateString()}</td>
+            <td><div class="actions-cell">
+                <button class="action-icon icon-edit" onclick="editChatGroup(${g.id})"><i class="fas fa-edit"></i></button>
+                <button class="action-icon icon-delete" onclick="deleteChatGroup(${g.id})"><i class="fas fa-trash"></i></button>
+            </div></td>
+        </tr>`;
+    });
+    html += '</tbody></table></div>';
+    document.getElementById('mainContent').innerHTML = html;
+}
+
+// Function to open the Create/Edit Chat Group Modal (Correctly Defined)
+async function openChatGroupModal(d=null) {
+    document.getElementById('formChatGroup').reset();
+    document.getElementById('cgId').value = d ? d.id : '';
+    document.getElementById('cgTitle').innerText = d ? 'تعديل مجموعة' : 'مجموعة جديدة';
+    document.getElementById('cgMembersList').innerHTML = '<div style="padding:10px;text-align:center">جاري التحميل...</div>';
+    
+    // FIX: Set values correctly if editing (Wait for Reset to finish logically)
+    if (d) {
+        document.getElementById('cgName').value = d.name || '';
+        document.getElementById('cgAllowPrivate').checked = !!d.allow_private_chat;
+        document.getElementById('cgOnlyAdmins').checked = !!d.only_admins_can_send;
+    }
+
+    document.getElementById('modalChatGroup').style.display = 'flex';
+
+    // Populate Data
+    await refreshLevelsCache();
+    await refreshGroupsCache();
+    
+    const [teachers, students] = await Promise.all([
+        fetch(`${API}/teachers/all`).then(r=>r.json()),
+        fetch(`${API}/students/all`).then(r=>r.json())
+    ]);
+
+    // Get Existing Members if edit
+    let existingMembers = [];
+    if (d) {
+        const mRes = await fetch(`${API}/chat-groups/${d.id}/members`);
+        const members = await mRes.json();
+        existingMembers = members.map(m => m.id);
+    }
+
+    let html = '';
+    
+    // --- Search Box ---
+    html += `
+    <div style="padding:0 0 10px 0;position:sticky;top:0;background:#fff;z-index:10;border-bottom:1px solid #eee;margin-bottom:10px">
+        <input type="text" placeholder="بحث عن أستاذ أو طالبة..." 
+               style="width:100%;padding:10px;border:1px solid #ccc;border-radius:8px"
+               oninput="filterChatMembers(this.value)">
+    </div>`;
+
+    // --- Teachers Section ---
+    html += `
+    <div class="searchable-section" id="teachersSection">
+        <div style="font-weight:bold;margin:5px 0;background:#e0e7ff;padding:8px;border-radius:6px;color:#3730a3;display:flex;align-items:center;justify-content:space-between">
+            <span>الأساتذة</span>
+            <label style="font-size:0.8rem;cursor:pointer;display:flex;align-items:center;gap:5px">
+                <input type="checkbox" onchange="toggleAllTeachers(this.checked)" style="accent-color:#3730a3"> تحديد الكل
+            </label>
+        </div>
+    `;
+    teachers.forEach(t => {
+        html += `
+        <div class="bulk-item teacher-item searchable-item" data-name="${t.name}">
+            <input type="checkbox" name="members" class="teacher-cb" value="${t.id}" id="m_t_${t.id}" ${existingMembers.includes(t.id)?'checked':''}>
+            <label for="m_t_${t.id}">${t.name}</label>
+            <label class="admin-check-label">
+                <input type="checkbox" class="admin-check" onchange="toggleAdmin(this)" ${d && d.members && d.members.find(x=>x.user_id==t.id && x.is_admin)?'checked':''}> <span>مشرف</span>
+            </label>
+        </div>`;
+    });
+    html += `</div>`;
+
+    // --- Students Tree Section ---
+    html += `<div style="font-weight:bold;margin:15px 0 5px 0;background:#fce7f3;padding:8px;border-radius:6px;color:#9d174d">الطالبات</div>`;
+    
+    // 1. Group students by Level -> Group
+    const structure = {};
+    
+    // Initialize structure with all levels and groups to show empty ones too
+    allLevels.forEach(lvl => {
+        structure[lvl.id] = { name: lvl.name, groups: {}, directStudents: [] };
+        const lvlGroups = allGroups.filter(g => g.level_id === lvl.id);
+        lvlGroups.forEach(grp => {
+            structure[lvl.id].groups[grp.id] = { name: grp.name, students: [] };
+        });
+    });
+
+    // Populate with students
+    students.forEach(s => {
+        if(s.level_id && structure[s.level_id]) {
+            if(s.group_id && structure[s.level_id].groups[s.group_id]) {
+                structure[s.level_id].groups[s.group_id].students.push(s);
+            } else {
+                structure[s.level_id].directStudents.push(s);
+            }
+        }
+    });
+
+    // Build HTML Recursive-ish
+    for (const [lvlId, lvlData] of Object.entries(structure)) {
+        const lvlCheckId = `cb_lvl_${lvlId}`;
+        
+        html += `
+        <div class="tree-level-item searchable-container">
+            <div style="display:flex;align-items:center;margin-bottom:5px;padding:5px;background:#f8fafc;border-radius:6px">
+                <input type="checkbox" id="${lvlCheckId}" onchange="toggleLevelSelection(${lvlId}, this.checked)" style="width:20px;height:20px;margin-left:10px">
+                <label for="${lvlCheckId}" style="font-weight:bold;cursor:pointer;font-size:1rem;flex:1">${lvlData.name}</label>
+                <span id="count_lvl_${lvlId}" class="select-counter">0</span>
+            </div>
+            <div style="padding-right:15px">
+        `;
+
+        // Render Groups
+        for (const [grpId, grpData] of Object.entries(lvlData.groups)) {
+            const grpCheckId = `cb_grp_${grpId}`;
+            html += `
+            <div class="tree-group-item searchable-container">
+                <div style="display:flex;align-items:center;margin-bottom:5px">
+                    <input type="checkbox" id="${grpCheckId}" data-parent-lvl="${lvlId}" onchange="toggleGroupSelection(${grpId}, ${lvlId}, this.checked)" style="width:18px;height:18px;margin-left:10px">
+                    <label for="${grpCheckId}" style="font-weight:bold;cursor:pointer;flex:1">${grpData.name}</label>
+                    <span id="count_grp_${grpId}" class="select-counter">0</span>
+                </div>
+                <div style="padding-right:10px">
+            `;
+            
+            // Render Students in Group
+            grpData.students.forEach(s => {
+                const stdCheckId = `m_s_${s.id}`;
+                html += `
+                <div class="tree-student-item searchable-item" data-name="${s.name}">
+                    <input type="checkbox" name="members" value="${s.id}" id="${stdCheckId}" 
+                           data-parent-grp="${grpId}" data-parent-lvl="${lvlId}" 
+                           onchange="updateSelectionCounters('${grpId}', '${lvlId}')"
+                           ${existingMembers.includes(s.id)?'checked':''}>
+                    <label for="${stdCheckId}">${s.name}</label>
+                    <label class="admin-check-label">
+                        <input type="checkbox" class="admin-check" onchange="toggleAdmin(this)" ${d && d.members && d.members.find(x=>x.user_id==s.id && x.is_admin)?'checked':''}> <span>مشرف</span>
+                    </label>
+                </div>`;
+            });
+            
+            html += `</div></div>`; // End group inner div & item
+        }
+
+        // Render Direct Students in Level (No Group)
+        if (lvlData.directStudents.length > 0) {
+            html += `<div style="margin-top:5px;font-style:italic;color:#666;font-size:0.8rem">بدون فوج:</div>`;
+            lvlData.directStudents.forEach(s => {
+                const stdCheckId = `m_s_${s.id}`;
+                html += `
+                <div class="tree-student-item searchable-item" data-name="${s.name}">
+                    <input type="checkbox" name="members" value="${s.id}" id="${stdCheckId}" 
+                           data-parent-lvl="${lvlId}"
+                           onchange="updateSelectionCounters(null, '${lvlId}')"
+                           ${existingMembers.includes(s.id)?'checked':''}>
+                    <label for="${stdCheckId}">${s.name}</label>
+                    <label class="admin-check-label">
+                        <input type="checkbox" class="admin-check" onchange="toggleAdmin(this)" ${d && d.members && d.members.find(x=>x.user_id==s.id && x.is_admin)?'checked':''}> <span>مشرف</span>
+                    </label>
+                </div>`;
+            });
+        }
+
+        html += `</div></div>`; // End Level
+    }
+
+    // Handle Unclassified Students (No Level)
+    const unclassified = students.filter(s => !s.level_id);
+    if(unclassified.length > 0) {
+        html += `<div class="tree-level-item searchable-container"><div style="font-weight:bold;padding:5px">غير مصنف</div>`;
+        unclassified.forEach(s => {
+             html += `
+             <div class="tree-student-item searchable-item" data-name="${s.name}">
+                <input type="checkbox" name="members" value="${s.id}" id="m_s_${s.id}" ${existingMembers.includes(s.id)?'checked':''}>
+                <label for="m_s_${s.id}">${s.name}</label>
+                <label class="admin-check-label">
+                    <input type="checkbox" class="admin-check" onchange="toggleAdmin(this)" ${d && d.members && d.members.find(x=>x.user_id==s.id && x.is_admin)?'checked':''}> <span>مشرف</span>
+                </label>
+             </div>`;
+        });
+        html += `</div>`;
+    }
+
+    document.getElementById('cgMembersList').innerHTML = html;
+    
+    // Initial Counter Update
+    setTimeout(() => {
+        // Trigger updates for all levels found
+        Object.keys(structure).forEach(lid => {
+            // Update Group Counters first
+            Object.keys(structure[lid].groups).forEach(gid => updateSelectionCounters(gid, lid));
+            // Update Level Counter
+            updateSelectionCounters(null, lid);
+        });
+    }, 100);
+}
+
+// --- Tree Selection Logic ---
+
+function toggleLevelSelection(lvlId, checked) {
+    // 1. Select/Deselect all direct students in this level
+    const students = document.querySelectorAll(`input[name="members"][data-parent-lvl="${lvlId}"]`);
+    students.forEach(cb => {
+        // Only toggle visible items
+        if(cb.closest('.searchable-item').style.display !== 'none') {
+            cb.checked = checked;
+        }
+    });
+    
+    // 2. Select/Deselect all groups within this level
+    const grpCBs = document.querySelectorAll(`input[id^="cb_grp_"]`);
+    grpCBs.forEach(gcb => {
+        if(gcb.getAttribute('data-parent-lvl') == lvlId) {
+            gcb.checked = checked;
+            // Trigger selection for children of this group
+            const grpId = gcb.id.replace('cb_grp_', '');
+            toggleGroupSelection(grpId, lvlId, checked);
+        }
+    });
+
+    // Update Counters (will handle by toggleGroupSelection calls partially, but ensure top level)
+    updateSelectionCounters(null, lvlId);
+}
+
+function toggleGroupSelection(grpId, lvlId, checked) {
+    // Select/Deselect all students with data-parent-grp="grpId"
+    const students = document.querySelectorAll(`input[data-parent-grp="${grpId}"]`);
+    students.forEach(cb => {
+        if(cb.closest('.searchable-item').style.display !== 'none') {
+            cb.checked = checked;
+        }
+    });
+    
+    updateSelectionCounters(grpId, lvlId);
+}
+
+function updateSelectionCounters(grpId, lvlId) {
+    if (grpId) {
+        // Count checked students in this group
+        const allInGrp = document.querySelectorAll(`input[data-parent-grp="${grpId}"]`);
+        const checkedInGrp = document.querySelectorAll(`input[data-parent-grp="${grpId}"]:checked`);
+        const counter = document.getElementById(`count_grp_${grpId}`);
+        if(counter) {
+            counter.innerText = `${checkedInGrp.length} / ${allInGrp.length}`;
+            counter.classList.toggle('active', checkedInGrp.length > 0);
+            
+            const grpCB = document.getElementById(`cb_grp_${grpId}`);
+            if(grpCB) {
+                if(checkedInGrp.length === allInGrp.length && allInGrp.length > 0) grpCB.indeterminate = false; 
+                else if (checkedInGrp.length > 0) grpCB.indeterminate = true;
+                else { grpCB.indeterminate = false; grpCB.checked = false; }
+            }
+        }
+    }
+
+    if (lvlId) {
+        // Count checked students in this level (Grouped + Direct)
+        const allInLvl = document.querySelectorAll(`input[name="members"][data-parent-lvl="${lvlId}"]`);
+        const checkedInLvl = document.querySelectorAll(`input[name="members"][data-parent-lvl="${lvlId}"]:checked`);
+        const counter = document.getElementById(`count_lvl_${lvlId}`);
+        if(counter) {
+            counter.innerText = `${checkedInLvl.length} / ${allInLvl.length}`;
+            counter.classList.toggle('active', checkedInLvl.length > 0);
+            
+            const lvlCB = document.getElementById(`cb_lvl_${lvlId}`);
+            if(lvlCB) {
+                if(checkedInLvl.length > 0 && checkedInLvl.length < allInLvl.length) lvlCB.indeterminate = true;
+                else { lvlCB.indeterminate = false; if(checkedInLvl.length === 0) lvlCB.checked = false; }
+            }
+        }
+    }
+}
+
+// --- Filter Logic ---
+function filterChatMembers(term) {
+    term = term.toLowerCase();
+    
+    // Filter Items (Teachers & Students)
+    document.querySelectorAll('.searchable-item').forEach(item => {
+        const name = item.getAttribute('data-name').toLowerCase();
+        if(name.includes(term)) {
+            item.style.display = 'grid'; // Restore grid display for students/teachers
+        } else {
+            item.style.display = 'none';
+        }
+    });
+
+    // Handle Containers (Levels/Groups) visibility
+    // If a group has visible students, show group. If a level has visible groups or students, show level.
+    
+    // Reset all first if term is empty
+    if(!term) {
+        document.querySelectorAll('.searchable-container').forEach(c => c.style.display = 'block');
+        return;
+    }
+
+    // Check Groups
+    document.querySelectorAll('.tree-group-item').forEach(grp => {
+        const visibleChildren = grp.querySelectorAll('.tree-student-item[style="display: grid;"]');
+        grp.style.display = visibleChildren.length > 0 ? 'block' : 'none';
+    });
+
+    // Check Levels
+    document.querySelectorAll('.tree-level-item').forEach(lvl => {
+        const visibleGroups = lvl.querySelectorAll('.tree-group-item[style="display: block;"]');
+        const visibleDirectStudents = lvl.querySelectorAll('.tree-student-item[style="display: grid;"]');
+        lvl.style.display = (visibleGroups.length > 0 || visibleDirectStudents.length > 0) ? 'block' : 'none';
+    });
+}
+
+function toggleAllTeachers(checked) {
+    document.querySelectorAll('.teacher-cb').forEach(cb => {
+        // Only toggle if visible (filtered)
+        if(cb.closest('.searchable-item').style.display !== 'none') {
+            cb.checked = checked;
+        }
+    });
+}
+
+// ... existing helper functions ...
+
+function toggleAdmin(chk) {
+    // Helper to visualize admin status, real logic handled on submit
+}
+
+document.getElementById('formChatGroup').onsubmit = async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('cgId').value;
+    const name = document.getElementById('cgName').value;
+    const allow = document.getElementById('cgAllowPrivate').checked;
+    const onlyAdmin = document.getElementById('cgOnlyAdmins').checked;
+    
+    const members = [];
+    document.querySelectorAll('input[name="members"]:checked').forEach(cb => {
+        const row = cb.closest('.bulk-item') || cb.closest('.tree-student-item'); 
+        const isAdmin = row.querySelector('.admin-check') ? row.querySelector('.admin-check').checked : false;
+        members.push({ user_id: cb.value, is_admin: isAdmin });
+    });
+
+    const body = { name, allow_private: allow, only_admins_can_send: onlyAdmin, members };
+    const url = id ? `${API}/chat-groups/${id}` : `${API}/chat-groups`;
+    const method = id ? 'PUT' : 'POST';
+
+    try {
+        await fetch(url, { method, headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+        alert('تم الحفظ');
+        closeModals();
+        loadChatGroups();
+    } catch(e) { alert('خطأ'); }
+};
+
+async function viewGroupMembers(groupId) {
+    const res = await fetch(`${API}/chat-groups/${groupId}/members`);
+    const members = await res.json();
+    const container = document.getElementById('groupMembersListContainer');
+    container.innerHTML = members.length ? members.map(m => `
+        <div style="display:flex;align-items:center;padding:10px;border-bottom:1px solid #f1f5f9;gap:10px">
+            <div style="width:35px;height:35px;background:#e0e7ff;color:#4338ca;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold">${m.name.charAt(0)}</div>
+            <div>
+                <div style="font-weight:bold;font-size:0.95rem">${m.name}</div>
+                <div style="font-size:0.8rem;color:#64748b">${m.type === 'teacher' ? 'أستاذ' : 'طالبة'}</div>
+            </div>
+            ${m.is_admin ? '<span style="margin-right:auto;font-size:0.7rem;background:#fee2e2;color:#ef4444;padding:2px 8px;border-radius:10px">مشرف</span>' : ''}
+        </div>
+    `).join('') : '<div style="text-align:center;padding:20px;color:#999">لا يوجد أعضاء</div>';
+    document.getElementById('modalGroupMembersView').style.display = 'flex';
+}
+
+function editChatGroup(id) {
+    fetch(`${API}/chat-groups/${id}/details`)
+    .then(r=>r.json())
+    .then(d=>openChatGroupModal(d));
+}
+
+async function deleteChatGroup(id) {
+    if(!confirm("هل أنت متأكد من حذف المجموعة؟\nسيُطلب منك كلمة مرور المسؤول.")) return;
+    const password = prompt("أدخل كلمة مرور المسؤول:");
+    if (!password) return;
+    
+    try {
+        const res = await fetch('/api/chat-groups/delete', { 
+            method: 'POST', 
+            headers: {'Content-Type': 'application/json'}, 
+            body: JSON.stringify({id, password}) 
+        });
+        
+        if(res.ok) {
+            alert('تم الحذف');
+            loadChatGroups();
+        } else {
+            const d = await res.json();
+            alert(d.error || 'خطأ');
+        }
+    } catch(e) { alert('خطأ'); }
+}
+
+// 5. Teachers & Students Management (Same logic, just calling refresh/render)
+async function loadTeachers() { 
+    const data = await (await fetch(`${API}/teachers/all`)).json(); 
+    let html = `
+        <div class="section-header">
+            <h2 class="section-title">إدارة الأساتذة</h2>
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+                <div class="search-box"><i class="fas fa-search"></i><input type="text" onkeyup="filterTable('teachersTable', 1)" placeholder="بحث..."></div>
+                <button onclick="openTeacherModal()" class="btn btn-primary"><i class="fas fa-plus"></i> إضافة أستاذ</button>
+                <button onclick="openImportModal('teacher')" class="btn btn-success"><i class="fas fa-file-excel"></i> استيراد</button>
+                <button onclick="printArea('teachersArea')" class="btn btn-print"><i class="fas fa-print"></i> طباعة</button>
+                <button onclick="bulkDelete('teacher')" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> حذف المحدد</button>
+            </div>
+        </div>
+        <div id="teachersArea" class="table-container">
+            <table class="data-table" id="teachersTable">
+                <thead><tr>
+                    <th class="hide-print"><input type="checkbox" onchange="toggleSelectAll(this, 'teacher')"></th>
+                    <th>الاسم</th><th>اسم المستخدم</th><th>الهاتف</th><th class="hide-print">إجراء</th>
+                </tr></thead>
+                <tbody>`;
+    data.forEach(r => { 
+        html += `<tr>
+            <td class="hide-print"><input type="checkbox" class="select-checkbox" value="${r.id}" data-type="teacher"></td>
+            <td>${r.name}</td><td>${r.username}</td><td>${r.phone||'-'}</td>
+            <td class="hide-print"><div class="actions-cell">
+                <button class="action-icon icon-chat" onclick="openAdminChat(${r.id}, '${r.name.replace(/'/g,"\\'")}')"><i class="fas fa-comment-dots"></i></button>
+                <button class="action-icon icon-edit" onclick='openTeacherModal(${JSON.stringify(r)})'><i class="fas fa-pen"></i></button>
+                <button class="action-icon icon-delete" onclick="deleteItem('users', ${r.id})"><i class="fas fa-trash"></i></button>
+            </div></td>
+        </tr>`; 
+    });
+    html += '</tbody></table></div>'; 
+    document.getElementById('mainContent').innerHTML = html;
+}
+
+// 6. Students Management (FIXED PRINTING & DISPLAY)
+async function loadStudents() {
+    const [st, lv, gr] = await Promise.all([ fetch(`${API}/students/all`).then(r=>r.json()), fetch(`${API}/levels`).then(r=>r.json()), fetch(`${API}/groups`).then(r=>r.json()) ]);
+    let html = `
+        <div class="section-header">
+            <h2 class="section-title">إدارة الطالبات</h2>
+            <div style="display:flex;gap:10px">
+                <div class="search-box"><i class="fas fa-search"></i><input type="text" id="stSearch" placeholder="بحث..." oninput="filterStudents(this.value)"></div>
+                <button onclick="openStudentModal()" class="btn btn-primary">إضافة طالبة</button>
+                <button onclick="openImportModal('student')" class="btn btn-success">استيراد</button>
+                <button onclick="printArea('stArea')" class="btn btn-print"><i class="fas fa-print"></i> طباعة القائمة</button>
+                <button onclick="bulkDelete('student')" class="btn btn-danger">حذف</button>
+            </div>
+        </div>
+        <div id="stArea">`;
+    
+    // -- HIDDEN TABLE FOR PRINTING --
+    html += `<table class="data-table print-only" style="width:100%; border:1px solid #000; display:none">
+                <thead><tr><th>الاسم</th><th>اسم المستخدم</th><th>كلمة المرور</th><th>المستوى</th><th>الفوج</th></tr></thead>
+                <tbody>`;
+    st.forEach(s => {
+        html += `<tr>
+            <td>${s.name}</td>
+            <td>${s.username}</td>
+            <td>${s.registration_number}</td>
+            <td>${s.level_name||'-'}</td>
+            <td>${s.group_name||'-'}</td>
+        </tr>`;
+    });
+    html += `</tbody></table>`;
+    
+    // -- TREE VIEW FOR SCREEN --
+    html += `<div id="stTree" class="hide-print">`;
+    lv.forEach(l => {
+        const lGroups = gr.filter(g => g.level_id === l.id); 
+        const lStudents = st.filter(s => s.level_id === l.id);
+        html += `<details open><summary>${l.name} (${lStudents.length})</summary><div class="tree-content">`;
+        if(!lGroups.length) html += renderStudentList(lStudents);
+        else { 
+            lGroups.forEach(g => { 
+                const gStudents = st.filter(s => s.group_id === g.id); 
+                html += `<details open style="margin-right:20px"><summary>${g.name} (${gStudents.length})</summary><div class="tree-content">${renderStudentList(gStudents)}</div></details>`; 
+            }); 
+            const noGroup = lStudents.filter(s=>!s.group_id); 
+            if(noGroup.length) html += `<details open style="margin-right:20px"><summary>بلا فوج</summary>${renderStudentList(noGroup)}</details>`; 
+        }
+        html += `</div></details>`;
+    });
+    const noLevel = st.filter(s => !s.level_id); 
+    if(noLevel.length) html += `<details open><summary>غير مصنف</summary>${renderStudentList(noLevel)}</details>`;
+    html += `</div></div>`; 
+    
+    document.getElementById('mainContent').innerHTML = html;
+}
+function renderStudentList(list) { 
+    return list.map(s => `
+        <div class="student-card" data-name="${s.name}">
+            <div class="select-wrapper hide-print"><input type="checkbox" class="select-checkbox" value="${s.id}" data-type="student"></div>
+            <div><div class="st-label">الاسم</div><div class="st-info">${s.name}</div></div>
+            <div><div class="st-label">مستخدم</div><div class="st-info">${s.username}</div></div>
+            <div><div class="st-label">كلمة المرور</div><div class="st-cred">${s.registration_number||'***'}</div></div>
+            <div class="actions-cell hide-print">
+                <button class="action-icon icon-edit" onclick='editStudent(${JSON.stringify(s)})'><i class="fas fa-edit"></i></button>
+                <button class="action-icon icon-delete" onclick="deleteItem('users', ${s.id})"><i class="fas fa-trash"></i></button>
+            </div>
+        </div>
+    `).join(''); 
+}
+function filterStudents(t) { document.querySelectorAll('.student-card').forEach(c => c.style.display = c.dataset.name.toLowerCase().includes(t.toLowerCase()) ? 'grid' : 'none'); }
+
+// 7. Levels & Groups
+async function loadLevels() {
+    await refreshLevelsCache(); await refreshGroupsCache();
+    let html = `
+        <div class="section-header">
+            <h2 class="section-title">المستويات والأفواج</h2>
+            <div style="display:flex;gap:10px">
+                <button onclick="openLevelModal()" class="btn btn-primary"><i class="fas fa-plus"></i> إضافة مستوى</button>
+                <button onclick="printArea('levelsArea')" class="btn btn-print"><i class="fas fa-print"></i> طباعة</button>
+            </div>
+        </div>
+        <div id="levelsArea" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap:20px">`;
+        
+    allLevels.forEach(lvl => {
+        const groups = allGroups.filter(g => g.level_id == lvl.id);
+        html += `
+            <div class="level-card">
+                <div class="level-header">
+                    <h3 style="margin:0;font-size:1.1rem;color:var(--dark)">${lvl.name}</h3>
+                    <div class="actions-cell hide-print">
+                        <button onclick='openGroupModal(${lvl.id})' class="btn btn-success btn-sm">+ فوج</button>
+                        <button onclick='openLevelModal(${JSON.stringify(lvl)})' class="action-icon icon-edit"><i class="fas fa-pen"></i></button>
+                        <button onclick='deleteItem("levels", ${lvl.id})' class="action-icon icon-delete"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+                <div style="display:flex;flex-wrap:wrap;gap:8px">
+                    ${groups.map(g => `<div class="group-tag"><b>${g.name}</b><i class="fas fa-pen hide-print" style="cursor:pointer;color:var(--primary)" onclick='openGroupModal(${lvl.id}, ${JSON.stringify(g)})'></i><i class="fas fa-times hide-print" style="cursor:pointer;color:var(--danger)" onclick='deleteItem("groups", ${g.id})'></i></div>`).join('')}
+                </div>
+            </div>`;
+    });
+    html += '</div>'; 
+    document.getElementById('mainContent').innerHTML = html;
+}
+
+// 8. Teacher Assignments (Scope) - Enhanced with Select/Search
+async function loadTeacherGroups() {
+    // Fetch all data needed
+    const [g, ts, t] = await Promise.all([
+        fetch(`${API}/teacher-groups`).then(r=>r.json()), 
+        fetch(`${API}/teacher-teaching-students`).then(r=>r.json()), 
+        fetch(`${API}/teachers/all`).then(r=>r.json())
+    ]);
+    
+    // Store in cache for filtering
+    scopeData.groups = g;
+    scopeData.manual = ts;
+    scopeData.teachers = t;
+    
+    let html = `
+    <div class="section-header">
+        <h2 class="section-title">نطاق التدريس</h2>
+        <div style="display:flex;gap:10px;flex:1;justify-content:flex-end">
+             <select id="scopeTeacherFilter" onchange="renderTeacherScopeList()" style="padding:10px;border-radius:10px;border:1px solid var(--border);width:200px">
+                <option value="">كل الأساتذة</option>
+                ${t.map(tc => `<option value="${tc.id}">${tc.name}</option>`).join('')}
+             </select>
+             <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="scopeSearch" onkeyup="renderTeacherScopeList()" placeholder="بحث (أستاذ أو نطاق)...">
+             </div>
+             <button onclick="printArea('teacherGroupsArea')" class="btn btn-print"><i class="fas fa-print"></i> طباعة</button>
+        </div>
+    </div>
+    <div id="teacherGroupsArea"></div>`;
+    
+    document.getElementById('mainContent').innerHTML = html;
+    renderTeacherScopeList();
+}
+
+async function renderTeacherScopeList() {
+    const tid = document.getElementById('scopeTeacherFilter').value;
+    const term = document.getElementById('scopeSearch').value.toLowerCase();
+    const container = document.getElementById('teacherGroupsArea');
+    
+    // Filter teachers first
+    let teachersToRender = scopeData.teachers;
+    if (tid) {
+        teachersToRender = teachersToRender.filter(t => t.id == tid);
+    }
+    
+    // Prepare HTML
+    let html = '';
+    let found = false;
+    
+    // Iterate through filtered teachers
+    for (const tc of teachersToRender) {
+        
+        const mg = scopeData.groups.filter(r => r.teacher_id === tc.id); 
+        const myManual = scopeData.manual.filter(r => r.teacher_id === tc.id);
+        
+        // Filter by text search: Teacher Name OR Group/Level Names
+        const scopeString = mg.map(x => x.group_name + ' ' + x.level_name).join(' ') + ' ' + myManual.map(x => x.student_name).join(' ');
+        
+        if (
+            tc.name.toLowerCase().includes(term) || 
+            scopeString.toLowerCase().includes(term)
+        ) {
+            found = true;
+            
+            // Group by level for display
+            const grouped = {}; 
+            mg.forEach(a => { if(!grouped[a.level_name]) grouped[a.level_name] = []; grouped[a.level_name].push(a); });
+            
+            let tags = '';
+            for (const [lvl, grps] of Object.entries(grouped)) { 
+                tags += `<div style="margin-bottom:5px;font-weight:bold;font-size:0.9rem">${lvl}:</div><div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">${grps.map(x=>`<div class="assign-tag">${x.group_name}<i class="fas fa-times delete-assign hide-print" onclick="deleteItem('teacher-groups', ${tc.id}, ${x.group_id})"></i></div>`).join('')}</div>`; 
+            }
+            if(myManual.length) {
+                tags += `<div style="margin-bottom:5px;font-weight:bold;color:#db2777;font-size:0.9rem">طالبات أفراد (دروس خاصة/دعم):</div><div style="display:flex;flex-wrap:wrap;gap:8px">${myManual.map(s=>`<div class="assign-tag" style="background:#fce7f3;color:#db2777">${s.student_name}<span style="font-size:0.7em;color:#999;margin-right:3px">(${s.level_name||'-'}/${s.group_name||'-'})</span></div>`).join('')}</div>`;
+            }
+            
+            html += `<div class="teacher-assign-card" data-name="${tc.name}"><div class="teacher-assign-header"><div class="teacher-name-title"><i class="fas fa-chalkboard-teacher"></i> ${tc.name}</div><div style="display:flex;gap:5px" class="hide-print"><button class="btn btn-sm btn-primary" onclick="openBulkGroupModal(${tc.id}, '${tc.name}')">تعديل الأفواج</button><button class="btn btn-sm" style="background:#fce7f3;color:#db2777" onclick="openTeacherIndividualStudents(${tc.id}, '${tc.name}')">تعديل الطالبات</button></div></div><div>${tags||'<span style="color:#999">لا يوجد إسناد</span>'}</div></div>`;
+        }
+    }
+    
+    if (!found) html = '<div style="text-align:center;padding:20px;color:#999">لا توجد نتائج</div>';
+    container.innerHTML = html;
+}
+
+// 9. Links (Chat) - Enhanced
+async function loadLinks() {
+    bulkSelectedStudents.clear();
+    // Added safety for Promise.all to avoid crashes if one API fails
+    try {
+        const [t, l, s] = await Promise.all([ 
+            fetch(`${API}/teachers/all`).then(r=>r.json()), 
+            fetch(`${API}/student-teacher-links`).then(r=>r.json()), 
+            fetch(`${API}/students/all`).then(r=>r.json())
+        ]);
+        allStudentsCache = s || [];
+        allLinksCache = l || []; // Store links
+        allTeachersCache = t || []; // Store teachers
+
+        let html = `
+            <div class="section-header"><h2 class="section-title">ربط الطالبات بالأساتذة (للمحادثة الخاصة)</h2></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+                <div class="hide-print" style="background:#fff;padding:20px;border-radius:16px;border:1px solid var(--border)">
+                    <h3>إنشاء روابط فردية</h3>
+                    <div class="form-group"><label>اختر الأستاذ</label><select id="bulkLinkTeacher">${allTeachersCache.map(x=>`<option value="${x.id}">${x.name}</option>`).join('')}</select></div>
+                    <div class="form-group"><label>حدد الطالبات</label><input type="text" placeholder="بحث..." oninput="filterBulkList(this.value)" style="width:100%;margin-bottom:8px;padding:8px;border:1px solid #ddd"><div class="bulk-list" id="bulkLinkList"></div><div style="margin-top:5px">تم تحديد: <span id="selCount">0</span></div></div>
+                    <button onclick="submitBulkLink()" class="btn btn-primary" style="width:100%">ربط</button>
+                </div>
+                <div style="background:#fff;padding:20px;border-radius:16px;border:1px solid var(--border)">
+                    <div style="display:flex;justify-content:space-between;margin-bottom:10px;align-items:center">
+                        <h3>الروابط الحالية</h3>
+                        <button onclick="printArea('linksTable')" class="btn btn-sm btn-print"><i class="fas fa-print"></i> طباعة</button>
+                    </div>
+                    <div class="form-group hide-print" style="display:flex;gap:10px">
+                        <select id="filterTeacherLinksSelect" onchange="renderLinksList()" style="width:50%">
+                            <option value="">كل الأساتذة</option>
+                            ${allTeachersCache.map(x=>`<option value="${x.id}">${x.name}</option>`).join('')}
+                        </select>
+                        <input type="text" id="searchLinksInput" placeholder="بحث (أستاذ/طالبة)..." oninput="renderLinksList()" style="width:50%;padding:8px;border-radius:8px;border:1px solid #ddd;font-family:inherit">
+                    </div>
+                    <div id="linksTableContainer" class="table-container" style="max-height:400px;overflow-y:auto">
+                        <table class="data-table" id="linksTable">
+                            <thead><tr><th>الأستاذ</th><th>الطالبة</th><th class="hide-print">إجراء</th></tr></thead>
+                            <tbody id="linksTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>`;
+        document.getElementById('mainContent').innerHTML = html;
+        renderBulkLinkList(allStudentsCache);
+        renderLinksList();
+    } catch(e) {
+        console.error(e);
+        document.getElementById('mainContent').innerHTML = '<div style="color:red;text-align:center;padding:20px">حدث خطأ في تحميل البيانات. يرجى التأكد من تشغيل السيرفر.</div>';
+    }
+}
+
+// Added missing helper function for Links
+function renderBulkLinkList(list) {
+    const container = document.getElementById('bulkLinkList');
+    if(!container) return;
+    if(!list || list.length === 0) {
+        container.innerHTML = '<div style="padding:10px;color:#999">لا توجد طالبات</div>';
+        return;
+    }
+    // Limit to 100 items for performance if search is empty
+    const displayList = list.length > 500 ? list.slice(0, 100) : list;
+    
+    container.innerHTML = displayList.map(s => `
+        <div class="bulk-item">
+            <input type="checkbox" onchange="toggleLinkSelection(${s.id}, this.checked)" ${bulkSelectedStudents.has(s.id)?'checked':''}>
+            <label>${s.name}</label>
+        </div>
+    `).join('');
+}
+
+function renderLinksList() {
+    const tid = document.getElementById('filterTeacherLinksSelect').value;
+    const term = document.getElementById('searchLinksInput').value.toLowerCase();
+    
+    let filtered = allLinksCache;
+    
+    // Filter by selected teacher dropdown
+    if (tid) {
+        filtered = filtered.filter(l => l.teacher_id == tid);
+    }
+    
+    // Filter by search term (Student OR Teacher Name)
+    if (term) {
+        filtered = filtered.filter(l => 
+            l.student_name.toLowerCase().includes(term) || 
+            l.teacher_name.toLowerCase().includes(term)
+        );
+    }
+    
+    const tbody = document.getElementById('linksTableBody');
+    if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#999">لا توجد روابط</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = filtered.map(r => `
+        <tr>
+            <td>${r.teacher_name}</td>
+            <td>${r.student_name}</td>
+            <td class="hide-print"><button class="action-icon icon-delete" onclick="deleteItem('links', ${r.student_id}, ${r.teacher_id})"><i class="fas fa-trash"></i></button></td>
+        </tr>
+    `).join('');
+}
+
+function filterBulkList(term) { renderBulkLinkList(allStudentsCache.filter(s => s.name.toLowerCase().includes(term.toLowerCase()))); }
+function toggleLinkSelection(id, checked) { checked ? bulkSelectedStudents.add(id) : bulkSelectedStudents.delete(id); updateSelCount(); }
+function updateSelCount() { document.getElementById('selCount').innerText = bulkSelectedStudents.size; }
+async function submitBulkLink() {
+    const teacherId = document.getElementById('bulkLinkTeacher').value; const studentIds = Array.from(bulkSelectedStudents);
+    if (!teacherId || !studentIds.length) return alert('البيانات ناقصة');
+    const res = await fetch(`${API}/student-teacher-links/bulk`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ teacher_id: teacherId, student_ids: studentIds }) });
+    if (res.ok) { alert('تم'); loadLinks(); } else alert('خطأ');
+}
+
+// 13. Teacher Subjects - Enhanced (Select & Search)
+async function loadTeacherSubjects() {
+    const data = await (await fetch(`${API}/teacher-subjects`)).json(); 
+    const t = await (await fetch(`${API}/teachers/all`)).json();
+    
+    // Cache data for filtering
+    window.teacherSubjectsData = data;
+    window.teachersData = t;
+
+    let html = `
+    <div class="section-header">
+        <h2 class="section-title">تخصصات الأساتذة</h2>
+        <div style="display:flex;gap:10px;flex:1;justify-content:flex-end">
+             <select id="tsFilterTeacher" onchange="renderTeacherSubjects()" style="padding:10px;border-radius:10px;border:1px solid var(--border);width:200px">
+                <option value="">كل الأساتذة</option>
+                ${t.map(tc => `<option value="${tc.id}">${tc.name}</option>`).join('')}
+             </select>
+             <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="tsSearch" onkeyup="renderTeacherSubjects()" placeholder="بحث (أستاذ أو تخصص)...">
+             </div>
+             <button onclick="printArea('teacherSubjectsArea')" class="btn btn-print"><i class="fas fa-print"></i> طباعة</button>
+        </div>
+    </div>
+    <div id="teacherSubjectsArea"></div>`;
+    
+    document.getElementById('mainContent').innerHTML = html;
+    renderTeacherSubjects();
+}
+
+function renderTeacherSubjects() {
+    const tid = document.getElementById('tsFilterTeacher').value;
+    const term = document.getElementById('tsSearch').value.toLowerCase();
+    const container = document.getElementById('teacherSubjectsArea');
+    
+    let teachersToRender = window.teachersData;
+    
+    if (tid) {
+        teachersToRender = teachersToRender.filter(t => t.id == tid);
+    }
+    
+    let html = '';
+    let found = false;
+
+    teachersToRender.forEach(tc => {
+        const ms = window.teacherSubjectsData.filter(r => r.teacher_id === tc.id);
+        // Filter by search term: matches teacher name OR any of their subjects
+        const subjectsString = ms.map(s => s.subject_name).join(' ');
+        if (
+            tc.name.toLowerCase().includes(term) || 
+            subjectsString.toLowerCase().includes(term)
+        ) {
+            found = true;
+            html += `
+            <div class="teacher-assign-card" data-name="${tc.name}">
+                <div class="teacher-assign-header">
+                    <div class="teacher-name-title"><i class="fas fa-user-tie"></i> ${tc.name}</div>
+                    <button class="btn btn-sm btn-primary hide-print" onclick="openBulkSubjectModal(${tc.id}, '${tc.name}')">تعديل</button>
+                </div>
+                <div class="assign-tags">
+                    ${ms.length ? ms.map(s => `<div class="assign-tag">${s.subject_name}<i class="fas fa-times delete-assign hide-print" onclick="deleteItem('teacher-subjects', ${tc.id}, ${s.subject_id})"></i></div>`).join('') : '<span style="color:#999">لا توجد مواد</span>'}
+                </div>
+            </div>`;
+        }
+    });
+    
+    if (!found) html = '<div style="text-align:center;padding:20px;color:#999">لا توجد نتائج</div>';
+    container.innerHTML = html;
+}
+
+async function openBulkSubjectModal(tid, tname) {
+    const s = await(await fetch(`${API}/subjects`)).json(); const curr = await(await fetch(`${API}/teacher-subjects`)).json(); const my = curr.filter(x=>x.teacher_id==tid).map(x=>x.subject_id);
+    document.getElementById('bulkSubjTeacherId').value = tid; document.querySelector('#modalBulkSubjects h3').innerText = `المواد: ${tname}`;
+    document.getElementById('bulkSubjectsList').innerHTML = s.map(sub => `<div class="bulk-item"><input type="checkbox" id="bs_${sub.id}" value="${sub.id}" ${my.includes(sub.id)?'checked':''}><label for="bs_${sub.id}">${sub.name}</label></div>`).join('');
+    document.getElementById('modalBulkSubjects').style.display='flex';
+}
+document.getElementById('formBulkSubjects').onsubmit = async(e)=>{e.preventDefault(); const tid=document.getElementById('bulkSubjTeacherId').value; const sids=Array.from(document.querySelectorAll('#bulkSubjectsList input:checked')).map(c=>parseInt(c.value)); await fetch(`${API}/teacher-subjects/bulk`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({teacher_id:tid, subject_ids:sids})}); closeModals(); loadTeacherSubjects();};
+
+// 10. Lessons
+async function loadAllLessons() { 
+    const data = await (await fetch(`${API}/lessons`)).json(); 
+    let html = `
+        <div class="section-header">
+            <h2 class="section-title">إدارة الدروس</h2>
+            <button onclick="printArea('mainContent')" class="btn btn-print"><i class="fas fa-print"></i> طباعة القائمة</button>
+        </div>
+        <div class="table-container"><table class="data-table"><thead><tr><th>العنوان</th><th>المصدر</th><th>المادة</th><th>التاريخ</th><th>إجراء</th></tr></thead>
+        <tbody>`; 
+    data.forEach(l => { html += `<tr><td>${l.title}</td><td>${l.teacher_type==='admin'?'الإدارة':l.teacher_name}</td><td>${l.subject_name}</td><td style="direction:ltr;text-align:right">${new Date(l.created_at).toLocaleDateString()}</td><td class="hide-print"><button class="action-icon icon-delete" onclick="deleteItem('lessons', ${l.id})"><i class="fas fa-trash"></i></button></td></tr>`; }); 
+    html += '</tbody></table></div>'; 
+    document.getElementById('mainContent').innerHTML = html; 
+}
+
+// 11. Add Lesson (Admin)
+async function loadAddLesson() {
+    const [t, s] = await Promise.all([fetch(`${API}/teachers/all`).then(r=>r.json()), fetch(`${API}/subjects`).then(r=>r.json())]); 
+    await refreshLevelsCache(); await refreshGroupsCache();
+    let html = `
+        <div class="section-header"><h2 class="section-title">رفع درس (إداري)</h2></div>
+        <div style="background:#fff;padding:30px;border-radius:20px;max-width:800px;margin:0 auto">
+            <form id="adminLessonForm">
+                <div class="form-group" style="background:#f8fafc;padding:15px;border-radius:10px;border:1px solid #e2e8f0;margin-bottom:20px">
+                    <label>من يرفع الدرس؟</label>
+                    <div style="display:flex;gap:20px">
+                        <label style="cursor:pointer"><input type="radio" name="uploader" value="admin" checked onchange="toggleUploader(this.value)"> باسم الإدارة</label>
+                        <label style="cursor:pointer"><input type="radio" name="uploader" value="teacher" onchange="toggleUploader(this.value)"> نيابة عن أستاذ</label>
+                    </div>
+                </div>
+                <div class="form-group"><label>العنوان</label><input type="text" id="alTitle" required></div>
+                <div class="form-group"><label>الوصف</label><textarea id="alDesc"></textarea></div>
+                <div class="form-group" id="divSelectTeacher" style="display:none"><label>الأستاذ</label><select id="alTeacher" onchange="updateAdminLessonTargets(this.value)">${t.map(x=>`<option value="${x.id}">${x.name}</option>`).join('')}</select></div>
+                <div class="form-group"><label>المادة</label><select id="alSubject" required>${s.map(x=>`<option value="${x.id}">${x.name}</option>`).join('')}</select></div>
+                
+                <div class="form-group" style="background:#f8fafc;padding:10px;border-radius:8px">
+                    <label>نوع الاستهداف</label>
+                    <div style="display:flex;gap:15px;margin-bottom:10px">
+                        <label><input type="radio" name="targetType" value="general" checked onchange="updateAdminLessonTargetType(this.value)"> عام (مستويات/أفواج)</label>
+                        <label><input type="radio" name="targetType" value="student" onchange="updateAdminLessonTargetType(this.value)"> طالبات محددات</label>
+                    </div>
+                    
+                    <div id="alTargetGeneral">
+                        <label>المستهدفون (الأفواج/المستويات)</label>
+                        <div class="bulk-list" id="alGroupsList"></div>
+                    </div>
+                    
+                    <div id="alTargetStudent" style="display:none">
+                        <label>حدد الطالبات:</label>
+                        <input type="text" placeholder="بحث عن طالبة..." oninput="filterAdminLessonStudents(this.value)" style="width:100%;padding:8px;border-radius:8px;border:1px solid #ddd;margin-bottom:5px">
+                        <div class="bulk-list" id="alStudentsList"></div>
+                    </div>
+                </div>
+                
+                <div class="form-group"><label>ملف</label><input type="file" id="alFile" required></div>
+                <button class="btn btn-primary" style="width:100%">نشر</button>
+            </form>
+        </div>`;
+    document.getElementById('mainContent').innerHTML = html; 
+    renderAdminLessonScope('all');
+}
+
+// Global variable to store students for lesson targeting
+let adminLessonStudentsCache = [];
+
+async function toggleUploader(mode) { 
+    document.getElementById('divSelectTeacher').style.display = mode==='teacher'?'block':'none'; 
+    document.querySelector('input[name="targetType"][value="general"]').checked = true;
+    updateAdminLessonTargetType('general');
+    if(mode==='admin') renderAdminLessonScope('all'); 
+    else updateAdminLessonTargets(document.getElementById('alTeacher').value); 
+}
+
+function updateAdminLessonTargetType(type) {
+    document.getElementById('alTargetGeneral').style.display = type === 'general' ? 'block' : 'none';
+    document.getElementById('alTargetStudent').style.display = type === 'student' ? 'block' : 'none';
+    if (type === 'student') {
+        const mode = document.querySelector('input[name="uploader"]:checked').value;
+        const tid = mode === 'teacher' ? document.getElementById('alTeacher').value : null;
+        loadAdminLessonStudents(mode, tid);
+    }
+}
+
+async function loadAdminLessonStudents(mode, tid) {
+    document.getElementById('alStudentsList').innerHTML = '<div style="padding:10px">جاري التحميل...</div>';
+    let students = [];
+    if (mode === 'admin') students = await (await fetch(`${API}/students/all`)).json();
+    else {
+        const scope = await (await fetch(`${API}/teachers/${tid}/scope`)).json();
+        students = scope.students;
+    }
+    adminLessonStudentsCache = students;
+    renderAdminLessonStudentsList(students);
+}
+
+function renderAdminLessonStudentsList(list) {
+    const container = document.getElementById('alStudentsList');
+    if (!list || !list.length) { container.innerHTML = '<div style="padding:10px;color:#999">لا يوجد طالبات</div>'; return; }
+    container.innerHTML = list.map(s => `<div class="bulk-item"><input type="checkbox" class="target-student" value="${s.id}"><label>${s.name} <small style="color:#666">(${s.level_name||'-'} / ${s.group_name||'-'})</small></label></div>`).join('');
+}
+
+function filterAdminLessonStudents(term) {
+    const filtered = adminLessonStudentsCache.filter(s => s.name.toLowerCase().includes(term.toLowerCase()));
+    renderAdminLessonStudentsList(filtered);
+}
+
+async function renderAdminLessonScope(type) {
+    let html = ''; 
+    allLevels.forEach(lvl => { 
+        const grps = allGroups.filter(g => g.level_id === lvl.id); 
+        html += `<details open><summary><input type="checkbox" class="target-level" value="${lvl.id}"> ${lvl.name}</summary><div style="padding-right:20px">${grps.map(g=>`<div><input type="checkbox" class="target-group" value="${g.id}"> ${g.name}</div>`).join('')}</div></details>`; 
+    });
+    document.getElementById('alGroupsList').innerHTML = html;
+}
+async function updateAdminLessonTargets(tid) { 
+    const s = await (await fetch(`${API}/teachers/${tid}/scope`)).json(); 
+    document.getElementById('alGroupsList').innerHTML = s.groups.length ? s.groups.map(g=>`<div><input type="checkbox" class="target-group" value="${g.id}"> ${g.name}</div>`).join('') : 'لا يوجد أفواج مسندة لهذا الأستاذ'; 
+}
+document.addEventListener('submit', async (e) => {
+    if(e.target.id === 'adminLessonForm') {
+        e.preventDefault(); 
+        const mode = document.querySelector('input[name="uploader"]:checked').value;
+        const targetType = document.querySelector('input[name="targetType"]:checked').value;
+        
+        const fd = new FormData(); 
+        fd.append('teacher_id', mode==='teacher'?document.getElementById('alTeacher').value:adminUser.id); 
+        fd.append('subject_id', document.getElementById('alSubject').value); 
+        fd.append('title', document.getElementById('alTitle').value); 
+        fd.append('description', document.getElementById('alDesc').value); 
+        fd.append('file', document.getElementById('alFile').files[0]);
+        
+        if (targetType === 'student') {
+            const sids = Array.from(document.querySelectorAll('.target-student:checked')).map(c=>c.value);
+            if (!sids.length) return alert('اختر طالبة واحدة على الأقل');
+            fd.append('target_students', sids.join(','));
+        } else {
+            const grps = Array.from(document.querySelectorAll('.target-group:checked')).map(c=>c.value); 
+            const lvls = Array.from(document.querySelectorAll('.target-level:checked')).map(c=>c.value);
+            if(grps.length) fd.append('target_groups', grps.join(',')); 
+            if(lvls.length) fd.append('target_levels', lvls.join(','));
+            if(!grps.length && !lvls.length) return alert('اختر فوجاً أو مستوى واحداً على الأقل');
+        }
+
+        const res = await fetch(`${API}/lessons`, {method:'POST', body:fd}); 
+        if(res.ok) { alert('تم'); showSection('all_lessons'); } else alert('خطأ');
+    }
+});
+
+// 12. Settings
+function loadSettings() {
+    document.getElementById('mainContent').innerHTML = `
+        <div class="section-header"><h2 class="section-title">إعدادات المسؤول</h2></div>
+        <div style="background:#fff;padding:30px;border-radius:20px;max-width:500px;margin-bottom:20px">
+            <h3>بيانات الدخول</h3>
+            <form id="settingsForm">
+                <div class="form-group"><label>البريد الإلكتروني</label><input type="email" id="setEmail" value="${adminUser.email||''}" required></div>
+                <div class="form-group"><label>كلمة المرور الحالية</label><input type="password" id="setOldPass" required></div>
+                <div class="form-group"><label>كلمة المرور الجديدة</label><input type="password" id="setNewPass"></div>
+                <button class="btn btn-primary" style="width:100%">حفظ</button>
+            </form>
+        </div>
+        <div style="background:#fff;padding:30px;border-radius:20px;max-width:500px;border:1px solid #fee2e2">
+            <h3 style="color:#dc2626">منطقة المطور</h3>
+            <div id="devLockArea"><input type="password" id="devCodeInput" placeholder="كود المطور..." style="padding:8px;border-radius:8px;border:1px solid #ddd"><button class="btn" style="background:#64748b;color:#fff;margin-right:5px" onclick="checkDevCode()">عرض</button></div>
+            <div id="devActionArea" style="display:none"><button class="btn btn-danger" onclick="resetStats()">تصفير العدادات (Reset Stats)</button></div>
+        </div>
+    `;
+    document.getElementById('settingsForm').onsubmit = async (e) => { e.preventDefault(); const b = {id:adminUser.id, oldPassword:document.getElementById('setOldPass').value, newEmail:document.getElementById('setEmail').value}; if(document.getElementById('setNewPass').value) b.newPassword=document.getElementById('setNewPass').value; const r = await fetch(`${API}/admin/change-credentials`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}); if(r.ok) alert('تم'); else alert('خطأ'); };
+}
+function checkDevCode() { if(document.getElementById('devCodeInput').value==='DEV-2024-RESET') { document.getElementById('devLockArea').style.display='none'; document.getElementById('devActionArea').style.display='block'; } else alert('خطأ'); }
+async function resetStats() { if(confirm('متأكد؟')) await fetch(`${API}/admin/reset-stats`, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:'DEV-2024-RESET'})}); alert('تم'); }
+
+// 13. Other Subjects/Tables (Subjects)
+async function loadSubjects() { 
+    const data = await (await fetch(`${API}/subjects`)).json(); 
+    let html = `
+    <div class="section-header">
+        <h2 class="section-title">المواد الدراسية</h2>
+        <div style="display:flex;gap:10px">
+            <div class="search-box"><i class="fas fa-search"></i><input type="text" onkeyup="filterTable('subjectsTable', 0)" placeholder="بحث..."></div>
+            <button onclick="document.getElementById('formSubject').reset();document.getElementById('modalSubject').style.display='flex'" class="btn btn-primary">إضافة مادة</button>
+        </div>
+    </div>
+    <div class="table-container">
+        <table class="data-table" id="subjectsTable">
+            <thead><tr><th>الاسم</th><th>الوصف</th><th>إجراء</th></tr></thead>
+            <tbody>
+    `;
+    data.forEach(r => { html += `<tr><td>${r.name}</td><td>${r.description||'-'}</td><td><button class="action-icon icon-delete" onclick="deleteItem('subjects', ${r.id})"><i class="fas fa-trash"></i></button></td></tr>`; });
+    html += '</tbody></table></div>'; 
+    document.getElementById('mainContent').innerHTML = html;
+}
+
+// Utilities
+function renderTable(type, data, title, actions, headers, keys) {
+    let html = `<div class="section-header"><h2 class="section-title">${title}</h2><div style="display:flex;gap:10px">${actions}</div></div><div class="table-container"><table class="data-table"><thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}<th>إجراء</th></tr></thead><tbody>`;
+    data.forEach(r => { let val = keys.map(k => `<td>${r[k]||'-'}</td>`).join(''); let del = type==='teacher_subjects' ? `deleteItem('${type}', ${r.teacher_id}, ${r.subject_id})` : `deleteItem('${type}', ${r.id})`; html += `<tr>${val}<td><button class="action-icon icon-delete" onclick="${del}"><i class="fas fa-trash"></i></button></td></tr>`; });
+    html += '</tbody></table></div>'; document.getElementById('mainContent').innerHTML = html;
+}
+function filterTable(id, col) { const f = event.target.value.toUpperCase(); const tr = document.getElementById(id).getElementsByTagName("tr"); for (let i=1;i<tr.length;i++){ const td=tr[i].getElementsByTagName("td")[col]; if(td) tr[i].style.display = td.textContent.toUpperCase().indexOf(f)>-1 ? "" : "none"; } }
+// General filter for container with data-name attribute
+function filterContainer(containerId, className, term) {
+    const f = term.toLowerCase();
+    document.querySelectorAll(`#${containerId} .${className}`).forEach(card => {
+        card.style.display = card.dataset.name.toLowerCase().includes(f) ? 'flex' : 'none';
+    });
+}
+
+function openTeacherModal(d=null) { 
+    document.getElementById('formTeacher').reset(); 
+    document.getElementById('tId').value = d?d.id:''; 
+    document.getElementById('tName').value=d?d.name:''; 
+    document.getElementById('tUser').value=d?d.username:''; 
+    document.getElementById('tPhone').value=d?d.phone||'':''; 
+    // Password input logic removed
+    document.getElementById('modalTeacher').style.display='flex'; 
+}
+
+function generateTeacherData() {
+    // Only generate if ID is empty (new user)
+    if (document.getElementById('tId').value) return; 
+    
+    const u = document.getElementById('tUser');
+    const p = document.getElementById('tPhone');
+    
+    if (!u.value) u.value = 't_' + Math.floor(Math.random() * 100000);
+    if (!p.value) p.value = '0' + Math.floor(500000000 + Math.random() * 400000000);
+}
+
+function openStudentModal() { 
+    document.getElementById('formStudent').reset(); 
+    document.getElementById('modalStudent').style.display='flex'; 
+    updateGroupOptions(); 
+}
+function editStudent(s) { 
+    document.getElementById('sId').value=s.id; 
+    document.getElementById('sName').value=s.name; 
+    document.getElementById('sUser').value=s.username; 
+    document.getElementById('sLevel').value=s.level_id||''; 
+    // Clear password field
+    document.getElementById('sPassword').value = '';
+    updateGroupOptions().then(()=>{ document.getElementById('sGroup').value=s.group_id||''; }); 
+    document.getElementById('modalStudent').style.display='flex'; 
+}
+function openLevelModal(d=null) { document.getElementById('formLevel').reset(); document.getElementById('lvlId').value=d?d.id:''; document.getElementById('lvlName').value=d?d.name:''; document.getElementById('modalLevel').style.display='flex'; }
+function openGroupModal(lid, d=null) { document.getElementById('formGroup').reset(); document.getElementById('grpLevelId').value=lid; document.getElementById('grpId').value=d?d.id:''; document.getElementById('grpName').value=d?d.name:''; document.getElementById('modalGroup').style.display='flex'; }
+async function updateGroupOptions() { const lid = document.getElementById('sLevel').value; const grps = await (await fetch(`${API}/groups`)).json(); document.getElementById('sGroup').innerHTML = grps.filter(g => g.level_id == lid).map(x=>`<option value="${x.id}">${x.name}</option>`).join(''); }
+
+// Updated Form Submits to include password
+document.getElementById('formTeacher').onsubmit = (e) => { 
+    e.preventDefault(); 
+    const body = { name:document.getElementById('tName').value, username:document.getElementById('tUser').value, phone:document.getElementById('tPhone').value };
+    // Password field removed from body construction
+    submitForm(document.getElementById('tId').value?`${API}/users/${document.getElementById('tId').value}`:`${API}/teachers`, document.getElementById('tId').value?'PUT':'POST', body, loadTeachers); 
+};
+document.getElementById('formStudent').onsubmit = (e) => { 
+    e.preventDefault(); 
+    const body = { name:document.getElementById('sName').value, username:document.getElementById('sUser').value, level_id:document.getElementById('sLevel').value, group_id:document.getElementById('sGroup').value };
+    const pass = document.getElementById('sPassword').value;
+    if(pass) body.password = pass;
+    submitForm(document.getElementById('sId').value?`${API}/users/${document.getElementById('sId').value}`:`${API}/students`, document.getElementById('sId').value?'PUT':'POST', body, loadStudents); 
+};
+
+document.getElementById('formSubject').onsubmit = (e) => { e.preventDefault(); submitForm(`${API}/subjects`, 'POST', { name:document.getElementById('subName').value, description:document.getElementById('subDesc').value }, loadSubjects); };
+document.getElementById('formLevel').onsubmit = (e) => { e.preventDefault(); submitForm(document.getElementById('lvlId').value?`${API}/levels/${document.getElementById('lvlId').value}`:`${API}/levels`, document.getElementById('lvlId').value?'PUT':'POST', { name:document.getElementById('lvlName').value }, loadLevels); };
+document.getElementById('formGroup').onsubmit = (e) => { e.preventDefault(); submitForm(document.getElementById('grpId').value?`${API}/groups/${document.getElementById('grpId').value}`:`${API}/groups`, document.getElementById('grpId').value?'PUT':'POST', { name:document.getElementById('grpName').value, level_id:document.getElementById('grpLevelId').value }, loadLevels); };
+document.getElementById('formImport').onsubmit = async (e) => { e.preventDefault(); const fd = new FormData(); fd.append('file', document.getElementById('importFile').files[0]); await fetch(`${API}/${document.getElementById('importType').value}s/import`, {method:'POST', body:fd}); alert('تم'); closeModals(); if(document.getElementById('importType').value==='teacher') loadTeachers(); else loadStudents(); };
+function openImportModal(t) { document.getElementById('importType').value=t; document.getElementById('importHint').innerText=t==='teacher'?'Excel Columns: name (required), username, phone':'Excel Columns: name (required), level, group'; document.getElementById('modalImport').style.display='flex'; }
+async function deleteItem(type, id, id2) { if(confirm('حذف؟')) { let url=`${API}/${type}/${id}`; if(id2) url+=`/${id2}`; if(type==='links') url=`${API}/student-teacher-links`; await fetch(url,{method:'DELETE', body:id2&&type==='links'?JSON.stringify({student_id:id, teacher_id:id2}):null, headers:{'Content-Type':'application/json'}}); showSection(document.querySelector('.nav-btn.active').getAttribute('onclick').match(/'(.*)'/)[1]); } }
+async function bulkDelete(type) { const ids = Array.from(document.querySelectorAll(`.select-checkbox[data-type="${type}"]:checked`)).map(c=>c.value); if(!ids.length) return alert('حدد عناصر'); if(confirm('حذف؟')) { await fetch(`${API}/bulk-delete`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ids, type})}); showSection(document.querySelector('.nav-btn.active').getAttribute('onclick').match(/'(.*)'/)[1]); } }
+async function submitForm(url, m, b, cb) { await fetch(url,{method:m,headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}); closeModals(); cb(); }
+function toggleSelectAll(s, t) { document.querySelectorAll(`.select-checkbox[data-type="${t}"]`).forEach(c => c.checked = s.checked); }
+function closeModals() { document.querySelectorAll('.modal').forEach(m=>m.style.display='none'); }
+function printArea(id){ window.print(); }
+refreshLevelsCache().then(() => { document.getElementById('sLevel').innerHTML = allLevels.map(x=>`<option value="${x.id}">${x.name}</option>`).join(''); });
+</script>
+</body>
+</html>

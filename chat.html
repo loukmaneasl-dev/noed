@@ -1,0 +1,1077 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>المحادثة الآمنة</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #4361ee;
+      --primary-gradient: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+      --bg-color: #f0f2f5;
+      --white: #ffffff;
+      --text-dark: #1f2937;
+      --text-light: #6b7280;
+      --border-color: #e5e7eb;
+      --received-msg-bg: #ffffff;
+      --sent-msg-bg: #e0e7ff;
+      --sent-msg-text: #1e1b4b;
+    }
+    * {box-sizing:border-box; outline: none;}
+    body { margin:0; font-family: 'Tajawal', sans-serif; background: var(--bg-color); direction:rtl; color: var(--text-dark); height: 100vh; }
+    ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    
+    .app-container { display:flex; height:100vh; overflow:hidden; background: var(--white); }
+    
+    /* Sidebar */
+    .sidebar { width:380px; background:var(--white); border-left:1px solid var(--border-color); display:flex; flex-direction:column; z-index: 2; position: relative; }
+    
+    .sidebar-header { 
+        padding: 20px; background: var(--primary-gradient); color: var(--white); 
+        display:flex; align-items:center; justify-content:space-between; 
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    
+    .user-info { display:flex; align-items:center; gap:12px; }
+    .user-avatar { 
+        width:48px; height:48px; border-radius:50%; 
+        background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.3);
+        display:flex; align-items:center; justify-content:center; 
+        font-weight:800; font-size: 1.2rem;
+    }
+    
+    .header-actions { display:flex; gap: 8px; align-items:center; }
+    .sidebar-action-btn { 
+        background: rgba(255,255,255,0.15); border:0; color:var(--white); 
+        width: 40px; height: 40px; border-radius: 12px; 
+        cursor:pointer; display: flex; align-items:center; justify-content:center; 
+        transition: 0.2s; position: relative;
+    }
+    .sidebar-action-btn:hover { background: rgba(255,255,255,0.3); transform: translateY(-2px); }
+    .sidebar-action-btn i { font-size: 1.1rem; }
+    
+    .notif-badge {
+        position: absolute; top: 8px; right: 8px; 
+        width: 8px; height: 8px; background: #ef4444; 
+        border-radius: 50%; border: 1px solid #fff; 
+        display: none;
+    }
+    .notif-badge.active { display: block; }
+
+    /* Tabs */
+    .sidebar-tabs { display: flex; background: #f8fafc; border-bottom: 1px solid var(--border-color); display: none; }
+    .sidebar-tab { flex: 1; text-align: center; padding: 12px; cursor: pointer; font-weight: 600; color: #64748b; border-bottom: 3px solid transparent; transition: 0.2s; font-size: 0.95rem; position: relative; }
+    .sidebar-tab:hover { background: #f1f5f9; }
+    .sidebar-tab.active { color: var(--primary-color); border-bottom-color: var(--primary-color); background: #fff; }
+    
+    .tab-badge { position: absolute; top: 8px; left: 25%; width: 8px; height: 8px; background: #ef4444; border-radius: 50%; display: none; }
+    .tab-badge.active { display: block; }
+
+    .search-container { padding: 15px; border-bottom: 1px solid var(--border-color); }
+    .search-box { position: relative; }
+    .search-box input { width: 100%; padding: 12px 40px 12px 15px; border-radius: 12px; border: 1px solid var(--border-color); background: #f9fafb; font-family: inherit; }
+    .search-box i { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #9ca3af; }
+    
+    .conversations-list { flex:1; overflow-y:auto; }
+    .list-item { padding: 16px 20px; display:flex; gap:16px; align-items:center; border-bottom:1px solid #f3f4f6; cursor:pointer; transition: 0.2s; }
+    .list-item:hover { background: #f8fafc; }
+    .list-item.active { background: #eff6ff; border-right: 4px solid var(--primary-color); }
+    
+    /* Updated Avatar with Relative Position for Badge */
+    .list-avatar { 
+        width:45px; height:45px; border-radius:50%; 
+        background: #e0e7ff; color: var(--primary-color); 
+        display:flex; align-items:center; justify-content:center; 
+        font-weight:700; font-size: 1.1rem; 
+        position: relative; /* Essential for badge positioning */
+        overflow: visible !important; /* Ensure badge isn't clipped */
+    }
+    .list-avatar.admin { background: #fee2e2; color: #dc2626; }
+    
+    /* Unread Counter Badge Over Icon */
+    .unread-counter {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background: #ef4444;
+        color: #fff;
+        min-width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        font-size: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        border: 2px solid #fff;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        padding: 0 4px;
+        z-index: 10;
+    }
+    
+    .chat-area { flex:1; display:flex; flex-direction:column; background: #f0f2f5; position: relative; }
+    .chat-area::before { content: ""; position: absolute; inset: 0; background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"); pointer-events: none; }
+    
+    .chat-header { padding: 15px 24px; background: var(--white); border-bottom: 1px solid var(--border-color); display:flex; align-items:center; gap:16px; z-index: 10; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+    .chat-messages { flex:1; overflow-y:auto; padding:24px; display:flex; flex-direction:column; gap:12px; z-index: 5; }
+    
+    .message { max-width: 75%; padding: 12px 16px; border-radius: 16px; position: relative; line-height: 1.5; font-size: 0.95rem; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+    .message.sent { background: var(--sent-msg-bg); color: var(--sent-msg-text); align-self: flex-end; border-bottom-left-radius: 4px; }
+    .message.received { background: var(--received-msg-bg); color: var(--text-dark); align-self: flex-start; border-bottom-right-radius: 4px; }
+    .message .sender-name { font-size: 0.75rem; font-weight: 700; color: #e11d48; margin-bottom: 4px; display: block; }
+    .message .time { font-size:0.7rem; opacity:0.7; margin-top:4px; display:block; text-align:left; direction:ltr; }
+    
+    .message-input-area { padding: 15px 24px; background: var(--white); border-top: 1px solid var(--border-color); display:flex; gap:12px; align-items:center; z-index: 10; }
+    .message-input { flex:1; padding:12px 16px; border-radius: 24px; border: 1px solid var(--border-color); background: #f9fafb; resize: none; font-family: inherit; font-size: 0.95rem; }
+    .message-input:focus { border-color: var(--primary-color); background: #fff; }
+    .circle-btn { width: 44px; height: 44px; border-radius: 50%; border: 0; cursor: pointer; display:flex; align-items:center; justify-content:center; transition: 0.2s; }
+    .circle-btn:hover { transform: scale(1.05); }
+    .send-btn { background: var(--primary-color); color: #fff; box-shadow: 0 4px 10px rgba(67, 97, 238, 0.3); }
+    
+    .no-conversation { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-light); }
+    .no-conversation i { font-size: 4rem; color: #d1d5db; margin-bottom: 15px; }
+    
+    /* Notification Panel */
+    .notifications-panel { display: none; position: absolute; top: 75px; left: 20px; width: 320px; background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); z-index: 100; max-height: 400px; overflow-y: auto; }
+    .notifications-panel.active { display: block; }
+    .notif-header { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #eee; }
+    .notif-header h4 { margin: 0; color: #444; }
+    .clear-notif-btn { background: none; border: none; color: #ef4444; font-size: 0.8rem; cursor: pointer; font-family: inherit; }
+    .clear-notif-btn:hover { text-decoration: underline; }
+    
+    .notif-item { padding: 14px; border-bottom: 1px solid #f3f4f6; font-size: 0.9rem; cursor: pointer; transition: 0.2s; color: var(--text-dark); background: #fff; display: flex; flex-direction: column; gap: 4px; }
+    .notif-item:hover { background: #f9fafb; }
+    .notif-item.unread { background: #eff6ff; border-left: 3px solid var(--primary-color); font-weight: 600; }
+    .notif-icon-msg { color: var(--primary-color); margin-left: 5px; }
+    .notif-icon-sys { color: #f59e0b; margin-left: 5px; }
+
+    /* Modals */
+    .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); backdrop-filter: blur(2px); z-index:200; align-items:center; justify-content:center; animation: fadeIn 0.2s; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .modal-content { background:#fff; padding:25px; border-radius:16px; width:90%; max-width:550px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); max-height: 90vh; overflow-y: auto; }
+    
+    .btn { padding:10px 18px; border-radius:10px; border:0; cursor:pointer; background: var(--primary-color); color: #fff; font-weight: 600; transition: 0.2s; }
+    .btn:hover { background: #3a0ca3; }
+
+    /* Lesson Modal Tabs */
+    .lesson-tabs { display: flex; gap: 10px; margin-bottom: 15px; background: #f1f5f9; padding: 5px; border-radius: 10px; }
+    .lesson-tab { flex: 1; text-align: center; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: 0.2s; color: #64748b; }
+    .lesson-tab.active { background: #fff; color: var(--primary-color); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+
+    .target-list { max-height: 180px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 10px; padding: 5px; background: #f8fafc; }
+    .target-item { display: flex; align-items: center; padding: 8px 10px; border-bottom: 1px solid #f1f5f9; cursor: pointer; border-radius: 6px; }
+    .target-item:hover { background: #fff; }
+    .target-item input { margin-left: 10px; accent-color: var(--primary-color); width: 16px; height: 16px; }
+    
+    /* Group Info Styles */
+    .group-member-item { display:flex; align-items:center; padding:10px; border-bottom:1px solid #eee; }
+    .group-member-item:last-child { border-bottom:0; }
+    .member-avatar { width:35px; height:35px; border-radius:50%; background:#e0e7ff; color:#4361ee; display:flex; align-items:center; justify-content:center; font-weight:bold; margin-left:10px; }
+    .admin-tag { font-size:0.7rem; background:#fee2e2; color:#dc2626; padding:2px 6px; border-radius:4px; margin-right:auto; }
+    .group-setting-switch { display:flex; justify-content:space-between; align-items:center; background:#f8fafc; padding:12px; border-radius:8px; margin-bottom:15px; border:1px solid #e2e8f0; }
+    .toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 24px; }
+    .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+    input:checked + .slider { background-color: var(--primary-color); }
+    input:checked + .slider:before { transform: translateX(20px); }
+
+    /* Input Disabled State */
+    .input-disabled-msg { flex:1; text-align:center; color:#6b7280; font-size:0.9rem; padding:10px; background:#f3f4f6; border-radius:8px; font-weight:500; }
+    
+    .msg-action-btn { background: #f0fdf4; color: #16a34a; border:1px solid #dcfce7; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; margin-right:5px; transition:0.2s; }
+    .msg-action-btn:hover { background: #16a34a; color: #fff; }
+
+    /* New Message Button Style */
+    .btn-msg {
+        background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0;
+        padding: 5px 10px; border-radius: 8px; font-size: 0.8rem;
+        cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 5px;
+        transition: 0.2s;
+    }
+    .btn-msg:hover { background: #15803d; color: #fff; }
+
+    @media(max-width:768px){
+        .sidebar { width:100%; position:absolute; inset:0; }
+        .chat-area { display:none; width:100%; height:100%; position:absolute; inset:0; z-index:20; }
+        .chat-area.active { display:flex; }
+        #backBtn { display:block !important; }
+    }
+</style>
+</head>
+<body>
+  <div class="app-container">
+    <div class="sidebar" id="mainSidebar">
+      <div class="sidebar-header">
+        <div class="user-info">
+          <div class="user-avatar" id="userAvatar">?</div>
+          <div><div id="userName" style="font-weight:700"></div><div id="userType" style="font-size:0.8rem;opacity:0.9"></div></div>
+        </div>
+        <div class="header-actions">
+            <!-- Add Lesson Button -->
+            <button id="btnAddLesson" class="sidebar-action-btn" title="نشر درس جديد" style="display:none;background:rgba(255,255,255,0.25);border:1px solid rgba(255,255,255,0.3)">
+                <i class="fas fa-plus"></i>
+            </button>
+            <!-- Notification Button -->
+            <button id="btnNotif" class="sidebar-action-btn" title="الإشعارات">
+                <i class="fas fa-bell"></i>
+                <span class="notif-badge" id="notifBadge"></span>
+            </button>
+            <!-- Lessons Button -->
+            <button id="iconLessons" class="sidebar-action-btn" title="المكتبة / الدروس">
+                <i class="fas fa-book-open"></i>
+            </button>
+            <!-- Logout Button -->
+            <button onclick="logout()" class="sidebar-action-btn" title="تسجيل الخروج">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
+        </div>
+        <div id="notifPanel" class="notifications-panel">
+            <div class="notif-header">
+                <h4>الإشعارات</h4>
+                <button class="clear-notif-btn" onclick="clearAllNotifications()">مسح الكل</button>
+            </div>
+            <div id="notifList"></div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="sidebar-tabs" id="sidebarTabs">
+          <div class="sidebar-tab active" onclick="switchTab('private')">
+              <i class="fas fa-comment"></i> محادثات
+              <span class="tab-badge" id="badgePrivate"></span>
+          </div>
+          <div class="sidebar-tab" onclick="switchTab('groups')">
+              <i class="fas fa-users"></i> مجموعات
+              <span class="tab-badge" id="badgeGroups"></span>
+          </div>
+      </div>
+
+      <div class="search-container">
+          <div class="search-box">
+              <i class="fas fa-search"></i>
+              <input type="text" id="search" placeholder="بحث...">
+          </div>
+      </div>
+      <div class="conversations-list" id="listArea"></div>
+    </div>
+
+    <div class="chat-area">
+      <div class="chat-header">
+        <i class="fas fa-arrow-right" id="backBtn" style="cursor:pointer;display:none;font-size:1.2rem;color:#444"></i>
+        <div class="list-avatar" id="chatAvatar">?</div>
+        <div style="flex:1">
+            <div id="chatName" style="font-weight:700;font-size:1.1rem">اختر محادثة</div>
+        </div>
+        <button id="groupInfoBtn" style="display:none;background:none;border:0;cursor:pointer;color:#666;font-size:1.2rem;padding:5px"><i class="fas fa-info-circle"></i></button>
+      </div>
+      <div class="chat-messages" id="chatMessages">
+        <div class="no-conversation">
+            <i class="far fa-comments"></i>
+            <h3>أهلاً بك في المنصة</h3>
+            <p>اختر محادثة أو مجموعة للبدء</p>
+        </div>
+      </div>
+      <div class="message-input-area" id="inputArea" style="display:none">
+        <div id="inputControls" style="display:flex;width:100%;gap:12px;align-items:center">
+            <button class="circle-btn" style="background:#f3f4f6;color:#555" onclick="document.getElementById('fileIn').click()"><i class="fas fa-paperclip"></i></button>
+            <textarea id="msgIn" class="message-input" rows="1" placeholder="اكتب رسالتك هنا..."></textarea>
+            <button class="circle-btn send-btn" onclick="sendMsg()"><i class="fas fa-paper-plane"></i></button>
+        </div>
+        <div id="inputBlockedMsg" class="input-disabled-msg" style="display:none">
+            <i class="fas fa-lock"></i> تم إغلاق النشر في هذه المجموعة من قبل المشرفين
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <input type="file" id="fileIn" style="display:none" onchange="uploadFile()">
+
+  <!-- Group Info Modal -->
+  <div id="modalGroupInfo" class="modal">
+      <div class="modal-content">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;border-bottom:1px solid #eee;padding-bottom:10px">
+              <h3 style="margin:0">معلومات المجموعة</h3>
+              <button onclick="document.getElementById('modalGroupInfo').style.display='none'" style="background:none;border:0;font-size:1.5rem;cursor:pointer">&times;</button>
+          </div>
+          
+          <div id="groupAdminControls" style="display:none">
+             <div class="group-setting-switch">
+                 <div style="font-weight:600;color:#333"><i class="fas fa-bullhorn" style="color:#666;margin-left:5px"></i> السماح للأعضاء بالنشر</div>
+                 <label class="toggle-switch">
+                     <input type="checkbox" id="checkAllowPost" onchange="toggleGroupPosting()">
+                     <span class="slider"></span>
+                 </label>
+             </div>
+          </div>
+
+          <div style="font-weight:bold;margin-bottom:10px;color:#444">الأعضاء</div>
+          <div id="groupMembersList" style="max-height:300px;overflow-y:auto"></div>
+      </div>
+  </div>
+
+  <!-- Add Lesson Modal -->
+  <div id="modalAddLesson" class="modal">
+      <div class="modal-content">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+              <h3 style="margin:0;color:var(--primary-color)">نشر درس جديد</h3>
+              <button onclick="document.getElementById('modalAddLesson').style.display='none'" style="background:none;border:0;font-size:1.5rem;cursor:pointer">&times;</button>
+          </div>
+          <form id="formLesson">
+              <div style="margin-bottom:15px">
+                  <label style="display:block;margin-bottom:6px;font-weight:bold;color:#333">عنوان الدرس</label>
+                  <input type="text" id="lTitle" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:10px" required placeholder="مثال: مقدمة في العلوم">
+              </div>
+              
+              <div style="margin-bottom:15px">
+                  <label style="display:block;margin-bottom:6px;font-weight:bold;color:#333">المادة</label>
+                  <select id="lSubject" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:10px;background:#fff" required></select>
+              </div>
+              
+              <div style="margin-bottom:15px;background:#f8fafc;padding:15px;border-radius:12px;border:1px solid #e2e8f0">
+                  <label style="display:block;margin-bottom:10px;font-weight:bold;color:#333">لمن توجه هذا الدرس؟</label>
+                  <div class="lesson-tabs">
+                      <div class="lesson-tab active" id="tabLinkGroup" onclick="setLessonTab('group')">حسب الفوج</div>
+                      <div class="lesson-tab" id="tabLinkStudent" onclick="setLessonTab('student')">طالبات محددات</div>
+                  </div>
+                  
+                  <!-- Group Selection -->
+                  <div id="targetGroupArea" class="target-list">
+                      <div style="color:#666;padding:10px;text-align:center">جاري التحميل...</div>
+                  </div>
+                  
+                  <!-- Student Selection -->
+                  <div id="targetStudentArea" style="display:none">
+                      <input type="text" id="searchTargetStudent" placeholder="ابحث عن طالبة..." style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:8px;margin-bottom:8px">
+                      <div id="studentListContainer" class="target-list"></div>
+                  </div>
+              </div>
+              
+              <div style="margin-bottom:15px">
+                  <label style="display:block;margin-bottom:6px;font-weight:bold;color:#333">ملف الدرس</label>
+                  <input type="file" id="lFile" required style="width:100%;padding:10px;background:#f1f5f9;border-radius:10px">
+              </div>
+              
+              <div style="margin-bottom:20px">
+                  <label style="display:block;margin-bottom:6px;font-weight:bold;color:#333">وصف / ملاحظات</label>
+                  <textarea id="lDesc" rows="2" style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:10px"></textarea>
+              </div>
+
+              <button class="btn" style="width:100%;padding:12px;font-size:1rem">نشر الدرس</button>
+          </form>
+      </div>
+  </div>
+
+  <!-- Lesson List Modal -->
+  <div id="modalLessons" class="modal">
+      <div class="modal-content" style="width:650px;max-height:80vh;display:flex;flex-direction:column">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;padding-bottom:10px;border-bottom:1px solid #eee">
+              <h3 style="margin:0;color:var(--primary-color)">مكتبة الدروس</h3>
+              <button onclick="document.getElementById('modalLessons').style.display='none'" style="background:none;border:0;font-size:1.5rem;cursor:pointer">&times;</button>
+          </div>
+          <div id="lessonsList" style="flex:1;overflow-y:auto;padding-right:5px"></div>
+      </div>
+  </div>
+
+<script>
+let user = null, currentChat = null, currentGroup = null;
+let activeTab = 'private'; // 'private' or 'groups'
+let privateList = [], groupList = [];
+let pollInt = null;
+let lessonScopeStudents = []; // Cache for students in lesson modal
+
+document.addEventListener('DOMContentLoaded', async () => {
+    user = JSON.parse(localStorage.getItem('user'));
+    if(!user) location.href='/';
+    
+    document.getElementById('userName').innerText = user.name;
+    document.getElementById('userType').innerText = user.type === 'teacher' ? 'أستاذ' : 'طالبة';
+    document.getElementById('userAvatar').innerText = user.name.charAt(0);
+    
+    if(user.type === 'teacher') {
+        document.getElementById('btnAddLesson').style.display = 'flex';
+        document.getElementById('btnAddLesson').onclick = openAddLesson;
+    }
+    document.getElementById('iconLessons').onclick = loadLessons;
+    document.getElementById('groupInfoBtn').onclick = openGroupInfo;
+
+    await loadData();
+    setInterval(loadData, 5000); 
+    
+    // Notifications
+    document.getElementById('btnNotif').onclick = (e) => { 
+        document.getElementById('notifPanel').classList.toggle('active'); 
+        loadNotifs(); 
+        e.stopPropagation();
+    };
+    document.onclick = (e) => {
+        if(!document.getElementById('btnNotif').contains(e.target) && !document.getElementById('notifPanel').contains(e.target)) {
+            document.getElementById('notifPanel').classList.remove('active');
+        }
+    };
+    
+    // Search
+    document.getElementById('search').oninput = (e) => renderList(e.target.value);
+    
+    // Back button for mobile
+    document.getElementById('backBtn').onclick = () => {
+        document.querySelector('.chat-area').classList.remove('active');
+        currentChat = null; currentGroup = null;
+        if(pollInt) clearInterval(pollInt);
+    };
+});
+
+async function loadData() {
+    try {
+        // Load Private
+        const url = user.type === 'teacher' ? `/api/teacher/${user.id}/linked-students` : `/api/student/${user.id}/linked-teachers`;
+        const pList = await (await fetch(url)).json();
+        
+        // Load Groups
+        const grpRes = await fetch(`/api/user/${user.id}/chat-groups`);
+        const gList = await grpRes.json();
+
+        // Sort Helper Function: Timestamp
+        const getTimestamp = (item) => item.last_msg_time ? new Date(item.last_msg_time).getTime() : 0;
+        
+        // Sort Private List: Admin Always Top, then Time Descending
+        pList.sort((a, b) => {
+            // Check for Admin type or specific name "السيد المدير" or level "إدارة"
+            const isA = a.type === 'admin' || a.level_name === 'إدارة' || a.name.includes('المدير');
+            const isB = b.type === 'admin' || b.level_name === 'إدارة' || b.name.includes('المدير');
+            
+            // Priority for Admin
+            if (isA && !isB) return -1;
+            if (!isA && isB) return 1;
+            
+            // Otherwise sort by time
+            return getTimestamp(b) - getTimestamp(a);
+        });
+
+        // Sort Group List: Time Descending
+        gList.sort((a,b) => getTimestamp(b) - getTimestamp(a));
+
+        // Prevent counter flickering for active chat
+        if (currentChat) {
+            const openItem = pList.find(i => i.id === currentChat);
+            if(openItem) openItem.unread_count = 0;
+        }
+        if (currentGroup) {
+            const openGroup = gList.find(i => i.id === currentGroup);
+            if(openGroup) openGroup.unread_count = 0;
+            
+            // Sync current group permissions/role if open
+            const activeGrp = gList.find(g => g.id === currentGroup);
+            if (activeGrp) updateInputState(activeGrp);
+        }
+
+        // Merge logic: If we have an active private chat that is NOT in the list (e.g. started from group), add it temporarily
+        if (currentChat && !pList.find(i => i.id === currentChat)) {
+             const existing = privateList.find(i => i.id === currentChat);
+             if(existing) pList.unshift(existing); // Add to top
+        }
+
+        // Correct "General Manager" to "Mr. Director" in data if backend hasn't updated yet or to be safe
+        pList.forEach(p => {
+            if(p.name === 'المدير العام') p.name = 'السيد المدير';
+        });
+
+        privateList = pList;
+        groupList = gList;
+
+        // Manage Tabs Visibility
+        const tabContainer = document.getElementById('sidebarTabs');
+        if (groupList.length > 0) {
+            tabContainer.style.display = 'flex';
+        } else {
+            tabContainer.style.display = 'none';
+            activeTab = 'private'; 
+        }
+
+        // Calculate Unread for Badges
+        const unreadPrivate = privateList.reduce((acc, i) => acc + (i.unread_count || 0), 0);
+        const unreadGroups = groupList.reduce((acc, i) => acc + (i.unread_count || 0), 0);
+
+        const badgeP = document.getElementById('badgePrivate');
+        const badgeG = document.getElementById('badgeGroups');
+
+        // Only show if not active tab
+        if (activeTab === 'groups' && unreadPrivate > 0) badgeP.classList.add('active'); else badgeP.classList.remove('active');
+        if (activeTab === 'private' && unreadGroups > 0) badgeG.classList.add('active'); else badgeG.classList.remove('active');
+
+        renderList(document.getElementById('search').value);
+        loadNotifs(); // Check for notifications (Bell)
+        
+    } catch(e) {}
+}
+
+function switchTab(tab) {
+    activeTab = tab;
+    document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('active'));
+    document.querySelector(`.sidebar-tab[onclick="switchTab('${tab}')"]`).classList.add('active');
+    
+    // Hide Badge for current tab
+    if(tab === 'private') document.getElementById('badgePrivate').classList.remove('active');
+    if(tab === 'groups') document.getElementById('badgeGroups').classList.remove('active');
+
+    renderList(document.getElementById('search').value);
+}
+
+function renderList(term = '') {
+    const list = document.getElementById('listArea');
+    list.innerHTML = '';
+    
+    const source = activeTab === 'private' ? privateList : groupList;
+    const filtered = source.filter(i => i.name.toLowerCase().includes(term.toLowerCase()));
+
+    if(filtered.length === 0) {
+        list.innerHTML = `<div style="padding:30px;text-align:center;color:#999"><i class="fas fa-${activeTab==='groups'?'users':'user-friends'} fa-2x" style="margin-bottom:10px;opacity:0.5"></i><br>لا يوجد نتائج</div>`;
+        return;
+    }
+
+    filtered.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'list-item';
+        if ((activeTab === 'private' && currentChat === item.id) || (activeTab === 'groups' && currentGroup === item.id)) div.classList.add('active');
+        
+        let icon = '';
+        let avatarClass = 'list-avatar';
+        
+        if (activeTab === 'groups') {
+            icon = '<i class="fas fa-users"></i>';
+        } else {
+            if (item.level_name === 'إدارة' || item.level_name === 'الإدارة' || item.type === 'admin') { // Special check for Admin
+                icon = '<i class="fas fa-user-shield"></i>';
+                avatarClass += ' admin';
+            } else {
+                icon = (item.avatar || item.name.charAt(0));
+            }
+        }
+        
+        // Unread Badge placed OVER the avatar
+        const unreadHtml = item.unread_count > 0 ? `<div class="unread-counter">${item.unread_count > 99 ? '99+' : item.unread_count}</div>` : '';
+
+        const dateStr = item.last_msg_time ? new Date(item.last_msg_time).toLocaleDateString() : '';
+
+        div.innerHTML = `
+            <div class="${avatarClass}">
+                ${icon}
+                ${unreadHtml}
+            </div>
+            <div style="flex:1">
+                <div style="font-weight:700;display:flex;justify-content:space-between;align-items:center;font-size:0.95rem;color:#333">${item.name}</div>
+                <div style="font-size:0.8rem;color:#888;margin-top:2px">${dateStr}</div>
+            </div>
+        `;
+        div.onclick = () => openChat(item);
+        list.appendChild(div);
+    });
+}
+
+function openChat(item) {
+    if (pollInt) clearInterval(pollInt);
+    
+    // Immediate UI update to clear badge locally and visually
+    item.unread_count = 0;
+    
+    if (activeTab === 'private') {
+        currentChat = item.id; currentGroup = null;
+        document.getElementById('groupInfoBtn').style.display = 'none';
+        document.getElementById('inputControls').style.display = 'flex';
+        document.getElementById('inputBlockedMsg').style.display = 'none';
+        
+        // Update local list instantly
+        const idx = privateList.findIndex(x => x.id === item.id);
+        if(idx > -1) privateList[idx].unread_count = 0;
+    } else {
+        currentChat = null; currentGroup = item.id;
+        document.getElementById('groupInfoBtn').style.display = 'block';
+        updateInputState(item);
+        
+        // Update local list instantly
+        const idx = groupList.findIndex(x => x.id === item.id);
+        if(idx > -1) groupList[idx].unread_count = 0;
+    }
+
+    renderList(document.getElementById('search').value);
+    
+    document.getElementById('chatName').innerText = item.name;
+    // Set icon correctly for top header
+    let headerIcon = '';
+    if(activeTab === 'groups') headerIcon = '<i class="fas fa-users"></i>';
+    else if(item.level_name === 'إدارة' || item.type === 'admin') headerIcon = '<i class="fas fa-user-shield"></i>';
+    else headerIcon = item.avatar || item.name.charAt(0);
+    
+    document.getElementById('chatAvatar').innerHTML = headerIcon;
+    if(item.level_name === 'إدارة' || item.type === 'admin') document.getElementById('chatAvatar').classList.add('admin');
+    else document.getElementById('chatAvatar').classList.remove('admin');
+
+    document.getElementById('inputArea').style.display = 'flex';
+    
+    // Mobile View
+    document.querySelector('.chat-area').classList.add('active');
+    
+    loadMsgs();
+    pollInt = setInterval(loadMsgs, 3000);
+}
+
+function updateInputState(groupItem) {
+    const isRestricted = groupItem.only_admins_can_send;
+    const isGroupAdmin = groupItem.my_role_admin === 1;
+    const isSuperAdmin = user.type === 'admin';
+    
+    const canSend = !isRestricted || isGroupAdmin || isSuperAdmin;
+    
+    document.getElementById('inputControls').style.display = canSend ? 'flex' : 'none';
+    document.getElementById('inputBlockedMsg').style.display = canSend ? 'none' : 'block';
+}
+
+async function loadMsgs() {
+    if (!currentChat && !currentGroup) return;
+    
+    let url = '';
+    if (currentChat) url = `/api/conversation/${user.id}/${currentChat}`;
+    else url = `/api/chat-groups/${currentGroup}/messages`;
+
+    const msgs = await (await fetch(url)).json();
+    const container = document.getElementById('chatMessages');
+    const isBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 150;
+    
+    container.innerHTML = '';
+    if(msgs.length === 0) container.innerHTML = '<div class="no-conversation"><i class="far fa-comments fa-3x" style="color:#ddd;margin-bottom:10px"></i><p>ابدأ المحادثة الآن!</p></div>';
+
+    msgs.forEach(m => {
+        const isMe = m.sender_id === user.id;
+        const div = document.createElement('div');
+        div.className = `message ${isMe ? 'sent' : 'received'}`;
+        
+        let header = '';
+        if (currentGroup && !isMe) {
+            header = `<div class="sender-name">${m.sender_name}</div>`;
+        }
+
+        let content = '';
+        if (m.message_type === 'file') {
+            const isImg = ['jpg','png','jpeg','gif'].includes(m.file_name.split('.').pop().toLowerCase());
+            // Use the correct chat files endpoint to fix 404
+            if(isImg) content = `<img src="/api/chat/files/${m.file_path}" style="max-width:200px;border-radius:10px;cursor:pointer;margin-top:5px" onclick="window.open(this.src)">`;
+            else content = `<a href="/api/chat/files/${m.file_path}" target="_blank" style="display:flex;align-items:center;gap:8px;color:#333;text-decoration:none;background:rgba(0,0,0,0.05);padding:10px;border-radius:8px;margin-top:5px"><i class="fas fa-file fa-lg"></i> <span>${m.file_name}</span></a>`;
+        } else {
+            content = m.message_text;
+        }
+
+        // Use default locale for time to match device time (remove 'en-US')
+        const timeStr = new Date(m.sent_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+        div.innerHTML = `${header}${content}<span class="time">${timeStr}</span>`;
+        container.appendChild(div);
+    });
+
+    if(isBottom) container.scrollTop = container.scrollHeight;
+    
+    // Mark as read
+    if(currentChat) {
+        fetch('/api/conversation/mark-read', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sender_id:currentChat, reader_id:user.id})});
+    } else if (currentGroup) {
+        // Attempt to mark group messages as read if server supports it (currently best effort)
+        fetch('/api/conversation/mark-read', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({group_id:currentGroup, reader_id:user.id})});
+    }
+}
+
+async function sendMsg() {
+    const txt = document.getElementById('msgIn').value;
+    if(!txt) return;
+    
+    const body = { sender_id: user.id, message_text: txt };
+    if (currentChat) body.receiver_id = currentChat;
+    if (currentGroup) body.group_id = currentGroup;
+
+    const res = await fetch('/api/message/send', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    
+    if (res.status === 403) {
+        alert("لا يمكنك إرسال الرسائل (ممنوع أو مغلق)");
+        return;
+    }
+
+    document.getElementById('msgIn').value = '';
+    loadMsgs();
+}
+
+async function uploadFile() {
+    const file = document.getElementById('fileIn').files[0];
+    if(!file) return;
+    
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('sender_id', user.id);
+    if(currentChat) fd.append('receiver_id', currentChat);
+    if(currentGroup) fd.append('group_id', currentGroup);
+
+    const btn = document.querySelector('.circle-btn'); 
+    const old = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    
+    const res = await fetch('/api/message/upload', {method:'POST', body:fd});
+    
+    if (res.status === 403) {
+        alert("لا يمكنك إرسال الملفات");
+    }
+    
+    btn.innerHTML = old;
+    loadMsgs();
+}
+
+async function loadNotifs() {
+    // 1. Fetch System Notifications (Lessons & Admin Msgs)
+    const res = await fetch(`/api/notifications/${user.id}`);
+    const sysData = await res.json();
+    
+    // 2. Fetch Unread Chats (from local cache which is refreshed by loadData every 5s)
+    const unreadChats = [...privateList, ...groupList].filter(i => i.unread_count > 0);
+
+    const list = document.getElementById('notifList');
+    const badge = document.getElementById('notifBadge');
+    
+    const unreadSys = sysData.filter(n => !n.is_read).length;
+    const unreadMsgs = unreadChats.reduce((a,b) => a + b.unread_count, 0);
+    
+    const totalUnread = unreadSys + unreadMsgs;
+    if(totalUnread > 0) badge.classList.add('active'); else badge.classList.remove('active');
+
+    list.innerHTML = '';
+    if(sysData.length === 0 && unreadChats.length === 0) {
+        list.innerHTML = '<div style="padding:15px;color:#999;text-align:center">لا توجد إشعارات</div>';
+        return;
+    }
+    
+    // Render Unread Chats First
+    unreadChats.forEach(chat => {
+        const d = document.createElement('div');
+        d.className = 'notif-item unread';
+        d.innerHTML = `
+            <div><i class="fas fa-comment-dots notif-icon-msg"></i> <b>${chat.name}</b></div>
+            <div style="font-size:0.8rem;color:#555">لديك ${chat.unread_count} رسالة جديدة</div>
+        `;
+        d.onclick = () => { 
+            // Close panel and switch tab/open chat
+            document.getElementById('notifPanel').classList.remove('active');
+            if(chat.level_name) {
+                switchTab('private');
+                openChat(chat);
+            } else {
+                switchTab('groups');
+                openChat(chat);
+            }
+        };
+        list.appendChild(d);
+    });
+
+    // Render System Notifications
+    sysData.forEach(n => {
+        const d = document.createElement('div');
+        d.className = `notif-item ${n.is_read?'':'unread'}`;
+        d.innerHTML = `
+            <div><i class="fas fa-bullhorn notif-icon-sys"></i> ${n.message}</div>
+            <div style="font-size:0.75rem;color:#888">${new Date(n.created_at).toLocaleString()}</div>
+        `;
+        d.onclick = () => readNotif(n.id, n.link);
+        list.appendChild(d);
+    });
+}
+
+// Function to handle clicking a system notification
+async function readNotif(id, link) {
+    // Mark as read
+    await fetch(`/api/notifications/read/${id}`, {method:'POST'});
+    
+    // Handle smart links (e.g., open chat)
+    if (link && link.startsWith('action:chat:')) {
+        const targetId = parseInt(link.split(':')[2]);
+        // Find user in private list (Admin is usually in private list)
+        const targetUser = privateList.find(u => u.id === targetId);
+        
+        if (targetUser) {
+            document.getElementById('notifPanel').classList.remove('active');
+            switchTab('private');
+            openChat(targetUser);
+        } else {
+            // Fallback if not found locally (shouldn't happen for linked teachers/admin)
+            // Just refresh data and try to find
+            await loadData();
+            const reCheck = privateList.find(u => u.id === targetId);
+            if(reCheck) {
+                document.getElementById('notifPanel').classList.remove('active');
+                switchTab('private');
+                openChat(reCheck);
+            }
+        }
+    } else if (link && link !== 'null') {
+        // External link (e.g. file download)
+        window.open(link, '_blank');
+    }
+    
+    loadNotifs(); // Refresh list
+}
+
+async function clearAllNotifications() {
+    if(!confirm("هل أنت متأكد من مسح جميع الإشعارات؟")) return;
+    try {
+        await fetch(`/api/notifications/clear/${user.id}`, {method: 'POST'});
+        loadNotifs();
+    } catch(e) {
+        alert("حدث خطأ");
+    }
+}
+
+// --- Group Info & Settings ---
+async function openGroupInfo() {
+    if (!currentGroup) return;
+    
+    const grp = groupList.find(g => g.id === currentGroup);
+    if (!grp) return;
+
+    // Check if I am admin
+    const amAdmin = grp.my_role_admin === 1;
+    const ctrlDiv = document.getElementById('groupAdminControls');
+    
+    if (amAdmin) {
+        ctrlDiv.style.display = 'block';
+        // Note logic is reversed: "Allow Posting" checked means only_admins_can_send is FALSE
+        document.getElementById('checkAllowPost').checked = !grp.only_admins_can_send;
+    } else {
+        ctrlDiv.style.display = 'none';
+    }
+
+    const mRes = await fetch(`/api/chat-groups/${currentGroup}/members`);
+    const members = await mRes.json();
+    
+    // Check if Private Chat is allowed in this group
+    const allowPrivate = (grp.allow_private_chat == 1 || grp.allow_private_chat === true);
+
+    const list = document.getElementById('groupMembersList');
+    list.innerHTML = members.map(m => {
+        const icon = m.avatar || m.name.charAt(0);
+        const isMe = m.id === user.id;
+        // Allow messaging if not me AND private chat is allowed for the group
+        const msgBtn = (!isMe && allowPrivate) ? `<button class="btn-msg" onclick="startPrivateChat(${m.id}, '${m.name.replace(/'/g, "\\'")}')"><i class="fas fa-comment"></i> مراسلة</button>` : '';
+
+        return `
+            <div class="group-member-item">
+                <div class="member-avatar">${icon}</div>
+                <div style="margin-right:10px;flex:1">
+                    <div style="font-weight:bold;font-size:0.9rem">${m.name}</div>
+                    <div style="font-size:0.8rem;color:#888">${m.type === 'teacher' ? 'أستاذ' : 'طالبة'}</div>
+                </div>
+                ${msgBtn}
+                ${m.is_admin ? '<div class="admin-tag">مسؤول</div>' : ''}
+            </div>
+        `;
+    }).join('');
+
+    document.getElementById('modalGroupInfo').style.display = 'flex';
+}
+
+function startPrivateChat(targetId, targetName) {
+    document.getElementById('modalGroupInfo').style.display = 'none';
+    
+    // Check if already in private list
+    const existing = privateList.find(x => x.id === targetId);
+    if(existing) {
+        switchTab('private');
+        openChat(existing);
+    } else {
+        // Create temp object to open chat immediately
+        const newItem = {
+            id: targetId,
+            name: targetName,
+            avatar: null,
+            unread_count: 0
+        };
+        privateList.unshift(newItem); // Add to top
+        switchTab('private');
+        renderList(document.getElementById('search').value);
+        openChat(newItem);
+    }
+}
+
+async function toggleGroupPosting() {
+    const allowed = document.getElementById('checkAllowPost').checked;
+    // If allowed is true, then restriction (only_admins) is false
+    const onlyAdmins = !allowed; 
+    
+    try {
+        const res = await fetch(`/api/chat-groups/${currentGroup}/settings`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ user_id: user.id, only_admins_can_send: onlyAdmins })
+        });
+        
+        if (res.ok) {
+            // Update local state immediately
+            const idx = groupList.findIndex(g => g.id === currentGroup);
+            if (idx > -1) groupList[idx].only_admins_can_send = onlyAdmins ? 1 : 0;
+            updateInputState(groupList[idx]);
+        } else {
+            alert('فشل تحديث الإعدادات');
+            document.getElementById('checkAllowPost').checked = !allowed; // revert
+        }
+    } catch(e) {
+        alert('خطأ في الاتصال');
+        document.getElementById('checkAllowPost').checked = !allowed; // revert
+    }
+}
+
+// --- Add Lesson Logic ---
+async function openAddLesson() {
+    const sRes = await fetch('/api/teacher-subjects');
+    const allTS = await sRes.json();
+    const mySubjs = allTS.filter(x => x.teacher_id === user.id);
+    document.getElementById('lSubject').innerHTML = mySubjs.map(s => `<option value="${s.subject_id}">${s.subject_name}</option>`).join('');
+
+    const scopeRes = await fetch(`/api/teachers/${user.id}/scope`);
+    const scope = await scopeRes.json();
+    lessonScopeStudents = scope.students; // Cache students
+
+    // Render Groups
+    const gDiv = document.getElementById('targetGroupArea');
+    if (scope.groups.length === 0) {
+        gDiv.innerHTML = '<div style="color:red;padding:10px">لا توجد أفواج مسندة لك</div>';
+    } else {
+        gDiv.innerHTML = scope.groups.map(g => `
+            <label class="target-item">
+                <input type="checkbox" class="target-grp" value="${g.id}">
+                <span style="margin-right:10px;font-weight:500">${g.name} <small style="color:#666">(${g.level_name})</small></span>
+            </label>
+        `).join('');
+    }
+
+    // Render Students (Initial)
+    renderLessonStudents('');
+    setLessonTab('group'); // Default tab
+
+    document.getElementById('modalAddLesson').style.display='flex';
+}
+
+function renderLessonStudents(term) {
+    const sDiv = document.getElementById('studentListContainer');
+    const filtered = lessonScopeStudents.filter(s => s.name.toLowerCase().includes(term.toLowerCase()));
+    
+    if (filtered.length === 0) {
+        sDiv.innerHTML = '<div style="color:#999;padding:10px;text-align:center">لا توجد نتائج</div>';
+        return;
+    }
+    
+    sDiv.innerHTML = filtered.map(s => `
+        <label class="target-item">
+            <input type="checkbox" class="target-std" value="${s.id}">
+            <span style="margin-right:10px">${s.name}</span>
+        </label>
+    `).join('');
+}
+
+function setLessonTab(mode) {
+    document.getElementById('tabLinkGroup').classList.toggle('active', mode === 'group');
+    document.getElementById('tabLinkStudent').classList.toggle('active', mode === 'student');
+    document.getElementById('targetGroupArea').style.display = mode === 'group' ? 'block' : 'none';
+    document.getElementById('targetStudentArea').style.display = mode === 'student' ? 'block' : 'none';
+}
+
+document.getElementById('searchTargetStudent').addEventListener('input', (e) => {
+    renderLessonStudents(e.target.value);
+});
+
+document.getElementById('formLesson').onsubmit = async (e) => {
+    e.preventDefault();
+    const fd = new FormData();
+    fd.append('teacher_id', user.id);
+    fd.append('subject_id', document.getElementById('lSubject').value);
+    fd.append('title', document.getElementById('lTitle').value);
+    fd.append('description', document.getElementById('lDesc').value);
+    fd.append('file', document.getElementById('lFile').files[0]);
+    
+    // Check which tab is active
+    if(document.getElementById('targetGroupArea').style.display !== 'none') {
+        const grps = Array.from(document.querySelectorAll('.target-grp:checked')).map(c=>c.value);
+        if (grps.length > 0) fd.append('target_groups', grps.join(','));
+        else return alert('الرجاء اختيار فوج واحد على الأقل');
+    } else {
+        const stds = Array.from(document.querySelectorAll('.target-std:checked')).map(c=>c.value);
+        if (stds.length > 0) fd.append('target_students', stds.join(','));
+        else return alert('الرجاء اختيار طالبة واحدة على الأقل');
+    }
+
+    const btn = e.target.querySelector('button');
+    const old = btn.innerText; btn.innerText = 'جاري النشر...'; btn.disabled = true;
+
+    try {
+        const res = await fetch('/api/lessons', {method:'POST', body:fd});
+        if(res.ok) { alert('تم نشر الدرس بنجاح'); document.getElementById('modalAddLesson').style.display='none'; }
+        else alert('خطأ في النشر');
+    } catch(err) { alert('خطأ'); }
+    btn.innerText = old; btn.disabled = false;
+};
+
+// --- View Lessons ---
+async function loadLessons() {
+    let url = '';
+    if (user.type === 'teacher') {
+        // Fetch teacher's own uploads
+        url = `/api/teachers/${user.id}/lessons`;
+    } else {
+        // Fetch lessons for student
+        url = `/api/lessons?user_id=${user.id}`;
+        if (user.type==='student') url += `&user_group=${user.group_id}&user_level=${user.level_id}`;
+    }
+    
+    const res = await fetch(url);
+    const data = await res.json();
+    const list = document.getElementById('lessonsList');
+    list.innerHTML = '';
+    
+    if(data.length === 0) list.innerHTML = '<div style="padding:20px;text-align:center;color:#999">لا توجد دروس حالياً</div>';
+    
+    data.forEach(l => {
+        const d = document.createElement('div');
+        d.style.cssText = "border-bottom:1px solid #f1f5f9;padding:15px;background:#fff;margin-bottom:10px;border-radius:10px;border:1px solid #eee";
+        
+        // Handle teacher name display (Admin posts)
+        let teacherDisplay = `<i class="fas fa-user-tie"></i> ${l.teacher_name}`;
+        if(l.teacher_type === 'admin') teacherDisplay = `<span style="font-weight:bold;color:#4338ca"><i class="fas fa-user-shield"></i> الإدارة</span>`;
+
+        // If teacher, show delete button
+        const deleteBtn = (user.type === 'teacher') ? `<button class="btn" style="background:#fee2e2;color:#dc2626;padding:4px 8px;font-size:0.8rem;margin-right:5px" onclick="deleteLesson(${l.id})"><i class="fas fa-trash"></i></button>` : '';
+
+        d.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:start">
+                <div>
+                    <div style="font-weight:700;font-size:1.05rem;color:var(--primary-color)">${l.title}</div>
+                    <div style="font-size:0.85rem;color:#666;margin-top:2px"><i class="fas fa-book-reader"></i> ${l.subject_name||'عام'} | ${teacherDisplay}</div>
+                </div>
+                <div style="display:flex;align-items:center">
+                    ${deleteBtn}
+                    <a href="/api/lessons/files/${l.file_path}" target="_blank" class="btn" style="padding:6px 12px;font-size:0.85rem;text-decoration:none"><i class="fas fa-download"></i></a>
+                </div>
+            </div>
+            ${l.description ? `<div style="margin-top:8px;font-size:0.9rem;color:#444;background:#f9fafb;padding:8px;border-radius:6px">${l.description}</div>` : ''}
+            <div style="font-size:0.75rem;color:#999;margin-top:8px;text-align:left;direction:ltr">${new Date(l.created_at).toLocaleDateString()}</div>
+        `;
+        list.appendChild(d);
+    });
+    document.getElementById('modalLessons').style.display='flex';
+}
+
+async function deleteLesson(id) {
+    if(!confirm('هل أنت متأكد من حذف هذا الدرس؟')) return;
+    try {
+        const res = await fetch(`/api/lessons/${id}`, {method:'DELETE'});
+        if(res.ok) loadLessons(); else alert('خطأ في الحذف');
+    } catch(e) { alert('خطأ'); }
+}
+
+function logout() { localStorage.clear(); location.href='/'; }
+</script>
+</body>
+</html>
