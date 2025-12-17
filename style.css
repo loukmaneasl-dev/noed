@@ -1,0 +1,799 @@
+:root {
+    --primary-color: #4a6fa5;
+    --secondary-color: #6b8cbc;
+    --light-color: #f5f5f5;
+    --dark-color: #333;
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #f0f2f5;
+    color: var(--dark-color);
+    direction: rtl;
+}
+
+.container {
+    display: flex;
+    height: 100vh;
+}
+
+/* تصميم صفحة تسجيل الدخول */
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+}
+
+.login-form {
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+}
+
+.login-form h2 {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    color: var(--primary-color);
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.form-group input, .form-group textarea, .form-group select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+.form-group small {
+    color: #666;
+    font-size: 0.8rem;
+    display: block;
+    margin-top: 0.25rem;
+}
+
+.btn {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    text-decoration: none;
+    text-align: center;
+    width: 100%;
+}
+
+.btn:hover {
+    background-color: var(--secondary-color);
+}
+
+.btn.secondary {
+    background-color: #6c757d;
+}
+
+.btn.secondary:hover {
+    background-color: #5a6268;
+}
+
+.btn.danger {
+    background-color: var(--danger-color);
+}
+
+.btn.danger:hover {
+    background-color: #c82333;
+}
+
+.btn.success {
+    background-color: var(--success-color);
+}
+
+.btn.success:hover {
+    background-color: #218838;
+}
+
+.user-type-selector {
+    display: flex;
+    margin-bottom: 1.5rem;
+    border-radius: 5px;
+    overflow: hidden;
+    border: 1px solid #ddd;
+}
+
+.user-type-selector button {
+    flex: 1;
+    padding: 0.75rem;
+    background-color: #eee;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.user-type-selector button.active {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+/* تصميم الواجهة الرئيسية */
+.sidebar {
+    width: 350px;
+    background-color: white;
+    border-left: 1px solid #ddd;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.header {
+    background-color: white;
+    padding: 1rem;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.header h2 {
+    color: var(--primary-color);
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+}
+
+.logout-btn {
+    background-color: #f8f9fa;
+    color: var(--dark-color);
+    border: 1px solid #ddd;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.logout-btn:hover {
+    background-color: #e9ecef;
+}
+
+.chat-area {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+    background-color: white;
+}
+
+/* قسم المواد */
+.section-header {
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.section-header h3 {
+    color: var(--primary-color);
+    margin: 0;
+}
+
+.subjects-list {
+    flex: 1;
+    overflow-y: auto;
+}
+
+/* تصميم قائمة المواد */
+.subject-item {
+    border-bottom: 1px solid #eee;
+}
+
+.subject-header {
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.subject-header:hover {
+    background-color: #f9f9f9;
+}
+
+.subject-header.active {
+    background-color: #e9f0ff;
+}
+
+.subject-name {
+    font-weight: 500;
+    flex: 1;
+}
+
+.expand-btn {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: var(--primary-color);
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0.5rem;
+}
+
+.teachers-list {
+    background-color: #fafafa;
+    display: none;
+}
+
+.teachers-list.expanded {
+    display: block;
+}
+
+.teacher-item {
+    padding: 1rem;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+}
+
+.teacher-item:last-child {
+    border-bottom: none;
+}
+
+.teacher-item:hover {
+    background-color: #f0f0f0;
+}
+
+.teacher-item.active {
+    background-color: #e3f2fd;
+    border-right: 3px solid var(--primary-color);
+}
+
+.teacher-avatar {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background-color: var(--secondary-color);
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 0.9rem;
+    font-weight: bold;
+}
+
+.teacher-info {
+    flex: 1;
+}
+
+.teacher-name {
+    font-weight: 500;
+    display: block;
+}
+
+.loading {
+    padding: 2rem;
+    text-align: center;
+    color: #666;
+}
+
+.chat-window {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: white;
+}
+
+.welcome-message {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: #666;
+    padding: 2rem;
+}
+
+.welcome-message h3 {
+    margin-bottom: 1rem;
+    color: var(--primary-color);
+}
+
+.chat-header {
+    padding: 1rem;
+    border-bottom: 1px solid #ddd;
+    background-color: #f9f9f9;
+    display: flex;
+    align-items: center;
+}
+
+.chat-header h3 {
+    color: var(--primary-color);
+}
+
+.messages-container {
+    flex: 1;
+    padding: 1rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.message {
+    max-width: 70%;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    border-radius: 10px;
+    position: relative;
+    word-wrap: break-word;
+}
+
+.message.sent {
+    align-self: flex-end;
+    background-color: #e3f2fd;
+    border-bottom-right-radius: 0;
+}
+
+.message.received {
+    align-self: flex-start;
+    background-color: #f1f1f1;
+    border-bottom-left-radius: 0;
+}
+
+.message-sender {
+    font-weight: bold;
+    margin-bottom: 0.25rem;
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.message-text {
+    margin-bottom: 0.25rem;
+}
+
+.message-time {
+    font-size: 0.75rem;
+    color: #777;
+    text-align: left;
+}
+
+.file-attachment {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+    margin-top: 0.5rem;
+    gap: 0.5rem;
+}
+
+.file-icon {
+    color: var(--primary-color);
+}
+
+.download-btn {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.25rem 0.5rem;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+
+.download-btn:hover {
+    background-color: var(--secondary-color);
+}
+
+.message-input {
+    display: flex;
+    padding: 1rem;
+    border-top: 1px solid #ddd;
+    background-color: #f9f9f9;
+    gap: 0.5rem;
+}
+
+.message-input input {
+    flex: 1;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.file-upload-btn {
+    background-color: #eee;
+    border: none;
+    padding: 0.75rem;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.file-upload-btn:hover {
+    background-color: #ddd;
+}
+
+.send-btn {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.send-btn:hover {
+    background-color: var(--secondary-color);
+}
+
+/* تبويبات الشريط الجانبي للأستاذ */
+.sidebar-tabs {
+    display: flex;
+    border-bottom: 1px solid #ddd;
+    background-color: #f8f9fa;
+}
+
+.sidebar-tab-btn {
+    flex: 1;
+    padding: 1rem;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-weight: 500;
+}
+
+.sidebar-tab-btn.active {
+    border-bottom-color: var(--primary-color);
+    color: var(--primary-color);
+    background-color: white;
+}
+
+.sidebar-content {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.sidebar-tab-content {
+    display: none;
+    height: 100%;
+}
+
+.sidebar-tab-content.active {
+    display: block;
+}
+
+/* إجراءات إدارة النظام */
+.management-actions {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.management-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-align: right;
+    font-size: 0.9rem;
+    font-weight: 500;
+    width: 100%;
+}
+
+.management-btn:hover {
+    background-color: #f8f9fa;
+    border-color: var(--primary-color);
+}
+
+.management-btn span {
+    font-size: 1.2rem;
+}
+
+/* النوافذ المنبثقة */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-content.large {
+    max-width: 800px;
+}
+
+.modal-header {
+    padding: 1rem;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #666;
+}
+
+.modal-actions {
+    padding: 1rem;
+    border-bottom: 1px solid #eee;
+    background-color: #f8f9fa;
+}
+
+.form-actions {
+    padding: 1rem;
+    border-top: 1px solid #ddd;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
+/* قائمة اختيار الأساتذة */
+.teachers-checkbox-list {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 0.5rem;
+}
+
+.teacher-checkbox {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+    border-bottom: 1px solid #eee;
+}
+
+.teacher-checkbox:last-child {
+    border-bottom: none;
+}
+
+.teacher-checkbox input {
+    margin-left: 0.5rem;
+}
+
+/* إدارة المواد والطالبات */
+.subjects-management-list,
+.students-management-list,
+.teachers-management-list {
+    padding: 1rem;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.management-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid #eee;
+    background-color: white;
+}
+
+.management-item:last-child {
+    border-bottom: none;
+}
+
+.management-item:hover {
+    background-color: #f8f9fa;
+}
+
+.item-info {
+    flex: 1;
+}
+
+.item-name {
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+.item-details {
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.item-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.action-btn {
+    padding: 0.4rem 0.8rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: background-color 0.3s;
+}
+
+.action-btn.edit {
+    background-color: var(--warning-color);
+    color: white;
+}
+
+.action-btn.edit:hover {
+    background-color: #e0a800;
+}
+
+.action-btn.delete {
+    background-color: var(--danger-color);
+    color: white;
+}
+
+.action-btn.delete:hover {
+    background-color: #c82333;
+}
+
+.import-info {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 5px;
+    margin: 1rem;
+}
+
+.import-info h4 {
+    margin-bottom: 0.5rem;
+    color: var(--primary-color);
+}
+
+.import-info p {
+    margin-bottom: 0.25rem;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.password-note {
+    background-color: #e7f3ff;
+    border: 1px solid #b3d9ff;
+    border-radius: 5px;
+    padding: 0.75rem;
+    margin: 0.5rem 0;
+    font-size: 0.9rem;
+    color: #0066cc;
+}
+
+.password-note strong {
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+/* رسائل التنبيه */
+.alert {
+    padding: 0.75rem;
+    margin: 1rem;
+    border-radius: 5px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.alert-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+/* التجاوب مع الشاشات الصغيرة */
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+    }
+    
+    .sidebar {
+        width: 100%;
+        height: 300px;
+    }
+    
+    .message {
+        max-width: 85%;
+    }
+    
+    .modal-content {
+        width: 95%;
+        margin: 1rem;
+    }
+    
+    .management-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .item-actions {
+        align-self: flex-end;
+    }
+}
